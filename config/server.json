@@ -1,0 +1,10 @@
+{
+    "database": {
+        "name": "firewall-rules-prediction",
+        "host": "127.0.0.1",
+        "port": "5432",
+        "dbms": "postgresql",
+        "user": "xxx",
+        "password": "xxx"
+    }
+}
