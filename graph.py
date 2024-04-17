@@ -1,8 +1,5 @@
 import networkx as nx
 import pandas as pd
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import math
 
 
 def get_nodes(df: pd.DataFrame, col : str) -> list:
@@ -18,7 +15,7 @@ def add_nodes(graph : nx.Graph, df : pd.DataFrame, col_source_node : str, col_de
         graph.add_node(node)
 
 def add_edges(graph : nx.Graph, df : pd.DataFrame, col_source_node : str, col_destination_node : str) -> None:
-    for index, row in df.iterrows():
+    for _, row in df.iterrows():
         graph.add_edge(row[col_source_node], row[col_destination_node])
 
 def create_graph(df: pd.DataFrame, col_source_node : str, col_destination_node : str) -> nx.Graph:
@@ -55,21 +52,3 @@ def get_union_neigbors(graph : nx.Graph, node1: int, node2: int) -> int:
 
 def get_neigbors(graph : nx.Graph, node1: int) -> int:
     return len(list(graph.neighbors(node1)))     
-
-def add_metrics(df : pd.DataFrame, graph: nx.Graph) -> pd.DataFrame:
-    new_dataframe = []
-    with tqdm(total= len(df)) as pbar:
-        for index, row in df.iterrows():
-            n_common = get_common_neighbors(graph, row['Source Port'], row['Destination Port'])
-            n_union = get_union_neigbors(graph, row['Source Port'], row['Destination Port'])
-            n_neigbors_source = get_neigbors(graph, row['Source Port'])
-            n_neigbors_dest = get_neigbors(graph, row['Destination Port'])
-            jaccard_index = n_common/n_union
-            salton_index = n_common/math.sqrt(n_neigbors_dest * n_neigbors_source)
-            sorosen_index = n_common/(n_neigbors_source + n_neigbors_dest)
-            new_dataframe.append([n_common, jaccard_index, salton_index, sorosen_index])
-            pbar.update(1)
-    extra_df = pd.DataFrame(new_dataframe, columns=['common neighbors', 'jaccard index', 'salton index', 'sorosen index'])
-    df = pd.concat([df, extra_df], axis=1)
-    return df
-
