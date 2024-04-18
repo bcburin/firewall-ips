@@ -8,15 +8,18 @@ def get_nodes(df: pd.DataFrame, col : str) -> list:
         port.append(int(node))
     return port
 
+
 def add_nodes(graph : nx.Graph, df : pd.DataFrame, col_source_node : str, col_destination_node : str) -> None:
     node_set = set(get_nodes(df, col_source_node)) | set(get_nodes(df, col_destination_node))
     node_list = list(node_set)
     for node in node_list:
         graph.add_node(node)
 
+
 def add_edges(graph : nx.Graph, df : pd.DataFrame, col_source_node : str, col_destination_node : str) -> None:
     for _, row in df.iterrows():
         graph.add_edge(row[col_source_node], row[col_destination_node])
+
 
 def create_graph(df: pd.DataFrame, col_source_node : str, col_destination_node : str) -> nx.Graph:
     graph = nx.Graph()
@@ -42,6 +45,7 @@ def get_common_neighbors(graph : nx.Graph, node1: int, node2: int) -> int:
             p1 += 1
     return len(common_neighbor)
 
+
 def get_union_neigbors(graph : nx.Graph, node1: int, node2: int) -> int:
     neighbor1 = sorted(list(graph.neighbors(node1)))
     neighbor2 = sorted(list(graph.neighbors(node2)))
@@ -49,6 +53,7 @@ def get_union_neigbors(graph : nx.Graph, node1: int, node2: int) -> int:
     set2 = set(neighbor2)
     union_neigbors =  list(set1.union(set2))
     return len(union_neigbors)
+
 
 def get_neigbors(graph : nx.Graph, node1: int) -> int:
     return len(list(graph.neighbors(node1)))     
