@@ -1,5 +1,6 @@
 annotated-types==0.6.0
 contourpy==1.2.0
+croniter==2.0.3
 cycler==0.12.1
 et-xmlfile==1.1.0
 fonttools==4.50.0
