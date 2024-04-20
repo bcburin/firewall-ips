@@ -1,7 +1,7 @@
 from sqlmodel import create_engine, Session, SQLModel
 
-from src.config import ServerConfig
-from src.utils import Singleton
+from src.common.config import ServerConfig
+from src.common.utils import Singleton
 
 
 class DBManager(metaclass=Singleton):
@@ -25,7 +25,6 @@ class DBManager(metaclass=Singleton):
 
 
 if __name__ == '__main__':
-    from src.models.firewall_rule import FirewallRule
     from src.models.critical_rule import CriticalRule
     from src.models.enums import Action
 
