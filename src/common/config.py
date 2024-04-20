@@ -22,7 +22,7 @@ class BaseConfig(BaseModel):
 
     @classmethod
     @cache
-    def load(cls):
+    def get(cls):
         with open(get_config_dir() / cls.__config__filename__) as f:
             data = convert_dict_keys_camel_to_snake(json.load(f))
         return TypeAdapter(cls).validate_python(data)
@@ -38,6 +38,7 @@ class ServerConfig(BaseConfig):
         dbms: str
         user: str
         password: str
+        verbose: bool = False
 
     class AIModelConfig(BaseModel):
         class TrainingConfig(BaseModel):
@@ -70,5 +71,5 @@ class ServerConfig(BaseConfig):
 
 
 if __name__ == '__main__':
-    sc = ServerConfig.load()
+    sc = ServerConfig.get()
     print(sc)
