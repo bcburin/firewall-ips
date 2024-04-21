@@ -1,7 +1,7 @@
-from enum import Enum, auto
+from enum import Enum
 
 
-class Action(Enum):
-    ALLOW = auto()
-    BLOCK = auto()
-    DROP = auto()
+class Action(str, Enum):
+    ALLOW = 'allow'
+    BLOCK = 'block'
+    DROP = 'drop'

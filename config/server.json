@@ -1,10 +1,33 @@
 {
+    "host": "127.0.0.1",
+    "port": 8000,
     "database": {
-        "name": "firewall-rules-prediction",
+        "name": "fw-rules",
         "host": "127.0.0.1",
-        "port": "5432",
+        "port": 5432,
         "dbms": "postgresql",
         "user": "xxx",
-        "password": "xxx"
-    }
+        "password": "xxx",
+        "verbose": true
+    },
+    "aiModel": {
+        "training": {
+            "cronString": "* * * * *",
+            "runOnStart": false,
+            "data": {
+                "type": "file",
+                "path": "$root/data/log.xlsx"
+            }
+        },
+        "persistence": {
+            "directory": "$root/ai_models",
+            "maxSavedModels": 3,
+            "compression": {
+                "enable": true,
+                "tool": "zip",
+                "compressLatestModel": false
+            }
+        }
+    },
+    "devMode": true
 }
