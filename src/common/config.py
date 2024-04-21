@@ -1,19 +1,25 @@
 import json
 from enum import Enum
-from functools import cache
+from functools import cache, cached_property
+from pathlib import Path
+from typing import TypeVar, Type
 
 from pydantic import BaseModel, TypeAdapter
 
-from src.common.utils import get_config_dir, get_archive_dir, get_data_dir, convert_dict_keys_camel_to_snake
+from src.common.utils import get_config_dir, convert_dict_keys_camel_to_snake, \
+    resolve_variables_in_path, create_dir_if_not_exists
 
 
 class CompressionToolOption(str, Enum):
     ZIP = 'zip'
-    GZIP = 'gzip'
+    GZIP = 'gz'
 
 
 class TrainingDataTypeOption(str, Enum):
     FILE = 'file'
+
+
+T = TypeVar('T', bound='BaseConfig')
 
 
 class BaseConfig(BaseModel):
@@ -22,7 +28,7 @@ class BaseConfig(BaseModel):
 
     @classmethod
     @cache
-    def get(cls):
+    def get(cls: Type[T]) -> T:
         with open(get_config_dir() / cls.__config__filename__) as f:
             data = convert_dict_keys_camel_to_snake(json.load(f))
         return TypeAdapter(cls).validate_python(data)
@@ -44,7 +50,12 @@ class ServerConfig(BaseConfig):
         class TrainingConfig(BaseModel):
             class TrainingDataConfig(BaseModel):
                 type: TrainingDataTypeOption = TrainingDataTypeOption.FILE
-                path: str = get_data_dir() / 'log.xlsx'
+                path: str = '$data/log.xlsx'
+
+                @cached_property
+                @resolve_variables_in_path
+                def resolved_path(self) -> Path:
+                    return Path(self.path)
 
             cron_string: str
             run_on_start: bool = False
@@ -56,9 +67,16 @@ class ServerConfig(BaseConfig):
                 tool: CompressionToolOption = CompressionToolOption.ZIP
                 compress_latest_model: bool = False
 
-            directory: str = get_archive_dir()
+            directory: str = '$root/archive'
             max_saved_models: int | None = None
             compression: CompressionConfig
+            enable: bool = True
+
+            @cached_property
+            @create_dir_if_not_exists
+            @resolve_variables_in_path
+            def resolved_directory(self) -> Path:
+                return Path(self.directory)
 
         training: TrainingConfig
         persistence: PersistenceConfig
