@@ -20,7 +20,8 @@
             }
         },
         "persistence": {
-            "directory": "$root/ai_models",
+            "enable": true,
+            "directory": "$root/archive",
             "maxSavedModels": 3,
             "compression": {
                 "enable": true,

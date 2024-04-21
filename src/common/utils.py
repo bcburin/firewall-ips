@@ -1,4 +1,5 @@
 import re
+from functools import cache
 from pathlib import Path
 from typing import Callable
 
@@ -14,6 +15,7 @@ def create_dir_if_not_exists(f: Callable[..., Path]) -> Callable[..., Path]:
 
 
 def get_subdir_factory(subdir: str) -> Callable[[], Path]:
+    @cache
     @create_dir_if_not_exists
     def inner() -> Path:
         return get_project_dir() / subdir
@@ -21,6 +23,7 @@ def get_subdir_factory(subdir: str) -> Callable[[], Path]:
     return inner
 
 
+@cache
 def get_project_dir() -> Path:
     current_dir = Path(__file__)
     return current_dir.parent.parent.parent
@@ -28,7 +31,24 @@ def get_project_dir() -> Path:
 
 get_data_dir = get_subdir_factory('data')
 get_config_dir = get_subdir_factory('config')
-get_archive_dir = get_subdir_factory('archive')
+
+
+_path_vars = {
+    '$root': get_project_dir(),
+    '$data': get_data_dir(),
+    '$config': get_config_dir(),
+}
+
+
+def resolve_variables_in_path(f: Callable[..., Path]) -> Callable[..., Path]:
+    def inner(*args, **kwargs):
+        path_str = str(f(*args, **kwargs))
+        for var, val in _path_vars.items():
+            if var in path_str:
+                path_str = path_str.replace(var, str(val))
+        return Path(path_str)
+
+    return inner
 
 
 def convert_str_camel_to_snake(s: str) -> str:
@@ -43,6 +63,10 @@ def convert_dict_keys_camel_to_snake(d):
             convert_dict_keys_camel_to_snake(b)
             if isinstance(b, (dict, list))
             else b for a, b in d.items()}
+
+
+def convert_str_camel_to_hyphen(s: str) -> str:
+    return re.sub(r'(?<!^)(?=[A-Z][a-z])', '-', s).lower()
 
 
 class Singleton(type):
