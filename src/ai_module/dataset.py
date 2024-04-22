@@ -8,8 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from graph import create_graph, get_common_neighbors, get_neigbors, get_union_neigbors
 
 
-def prepare_label(data: pd.DataFrame) -> pd.DataFrame:
-    df = data[data['Action'] != "reset-both"]
+def prepare_label(df: pd.DataFrame) -> pd.DataFrame:
     df['label'] = df['Action'].apply(lambda x: 1 if x == 'allow' else 0)
     df = df.drop('Action', axis=1)
     return df.dropna()
@@ -37,7 +36,7 @@ def add_metrics(df : pd.DataFrame, col1: int, col2: int) -> pd.DataFrame:
 def normalize_data(df : pd.DataFrame) -> pd.DataFrame:
     scaler = StandardScaler()
     label = df['label']
-    df = df.drop('label', axis=1) 
+    df = df.drop(['label'], axis=1)
     df = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
     df['label'] = label
     return df

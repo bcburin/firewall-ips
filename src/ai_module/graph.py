@@ -2,6 +2,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 
+
 def get_nodes(df: pd.DataFrame, col : str, graph : nx.Graph) -> None:
     for node in df[col].unique():
         if np.isnan(node):
