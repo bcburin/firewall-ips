@@ -10,7 +10,7 @@
         "password": "xxx",
         "verbose": true
     },
-    "aiModel": {
+    "aiModule": {
         "training": {
             "cronString": "* * * * *",
             "runOnStart": false,

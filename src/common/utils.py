@@ -1,4 +1,8 @@
+import gzip
 import re
+import shutil
+import zipfile
+from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
 from typing import Callable
@@ -52,8 +56,9 @@ def resolve_variables_in_path(f: Callable[..., Path]) -> Callable[..., Path]:
 
 
 def convert_str_camel_to_snake(s: str) -> str:
-    s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s).lower()
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
+    s = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', s)
+    s = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s)
+    return re.sub(r'([a-z])([A-Z])', r'\1_\2', s).lower()
 
 
 def convert_dict_keys_camel_to_snake(d):
@@ -76,3 +81,41 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+
+class CompressionTool(ABC):
+    @staticmethod
+    @abstractmethod
+    def compress(filepath: Path | str):
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def decompress(compressed_filepath: Path, output_filepath: Path) -> None:
+        ...
+
+
+class ZipCompressionTool(CompressionTool):
+    @staticmethod
+    def compress(filepath: Path):
+        with zipfile.ZipFile(str(filepath) + '.zip', 'w') as zip_file:
+            zip_file.write(filepath)
+
+    @staticmethod
+    def decompress(compressed_filepath: Path, output_filepath: Path) -> None:
+        with zipfile.ZipFile(compressed_filepath, 'r') as zip_file:
+            zip_file.extractall(output_filepath)
+
+
+class GzipCompressionTool(CompressionTool):
+    @staticmethod
+    def compress(filepath: Path) -> None:
+        with open(filepath, 'rb') as f_in:
+            with gzip.open(str(filepath) + '.gz', 'wb') as f_out:
+                f_out.writelines(f_in)
+
+    @staticmethod
+    def decompress(compressed_filepath: Path, output_filepath: Path) -> None:
+        with gzip.open(compressed_filepath, 'rb') as f_in:
+            with open(output_filepath, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
