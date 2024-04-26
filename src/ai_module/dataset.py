@@ -3,26 +3,26 @@ import math
 import pandas as pd
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 
-from graph import create_graph, get_common_neighbors, get_neigbors, get_union_neigbors
+from graph import create_graph, get_common_neighbors_size, get_neighbors_size, get_union_neighbors_size
 
 
 def prepare_label(df: pd.DataFrame) -> pd.DataFrame:
-    df['label'] = df['Action'].apply(lambda x: 1 if x == 'allow' else 0)
+    df = df[df['Action'] != 'reset-both']
+    df['label'] = df['Action'].apply(lambda x: 0 if x == 'allow' else (1 if x == 'deny' else 2))
     df = df.drop('Action', axis=1)
     return df.dropna()
 
 
-def add_metrics(df : pd.DataFrame, col1: int, col2: int) -> pd.DataFrame:
+def add_graph_metrics(df : pd.DataFrame, col1: int, col2: int) -> pd.DataFrame:
     graph = create_graph(df, col1, col2)
     new_dataframe = []
     with tqdm(total= len(df)) as pbar:
         for _, row in df.iterrows():
-            n_common = get_common_neighbors(graph, row[col1], row[col2])
-            n_union = get_union_neigbors(graph, row[col1], row[col2])
-            n_neigbors_source = get_neigbors(graph, row[col1])
-            n_neigbors_dest = get_neigbors(graph, row[col2])
+            n_common = get_common_neighbors_size(graph, row[col1], row[col2])
+            n_union = get_union_neighbors_size(graph, row[col1], row[col2])
+            n_neigbors_source = get_neighbors_size(graph, row[col1])
+            n_neigbors_dest = get_neighbors_size(graph, row[col2])
             jaccard_index = n_common/n_union
             salton_index = n_common/math.sqrt(n_neigbors_dest * n_neigbors_source)
             sorosen_index = n_common/(n_neigbors_source + n_neigbors_dest)
@@ -34,10 +34,9 @@ def add_metrics(df : pd.DataFrame, col1: int, col2: int) -> pd.DataFrame:
 
 
 def normalize_data(df : pd.DataFrame) -> pd.DataFrame:
-    scaler = StandardScaler()
     label = df['label']
-    df = df.drop(['label'], axis=1)
-    df = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
+    df = df.drop('label', axis=1)
+    df = (df-df.mean())/df.std()
     df['label'] = label
     return df
 
@@ -51,8 +50,8 @@ def split_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series,
 def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     df = prepare_label(data)
     df['NAT translation'] = df.apply(lambda row: row['Source Port'] == row['NAT Source Port'] or row['Destination Port'] == row['NAT Destination Port'], axis=1)
-    df = add_metrics(df, 'Source Port', 'Destination Port')
-    df = add_metrics(df, 'NAT Source Port', 'NAT Destination Port')
+    df = add_graph_metrics(df, 'Source Port', 'Destination Port')
+    df = add_graph_metrics(df, 'NAT Source Port', 'NAT Destination Port')
     df = normalize_data(df)
     return df
 
