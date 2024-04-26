@@ -161,3 +161,8 @@ cython_debug/
 
 # Others
 .~lock*
+
+# serialized state files
+*.bytes
+*.zip
+*.gz

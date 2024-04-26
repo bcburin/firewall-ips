@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from enum import Enum
 from functools import cache, cached_property
@@ -7,12 +9,22 @@ from typing import TypeVar, Type
 from pydantic import BaseModel, TypeAdapter
 
 from src.common.utils import get_config_dir, convert_dict_keys_camel_to_snake, \
-    resolve_variables_in_path, create_dir_if_not_exists
+    resolve_variables_in_path, create_dir_if_not_exists, CompressionTool, ZipCompressionTool, GzipCompressionTool
 
 
 class CompressionToolOption(str, Enum):
     ZIP = 'zip'
     GZIP = 'gz'
+
+    @staticmethod
+    def get_tool_implementation(tool_option: CompressionToolOption | str) -> CompressionTool:
+        if isinstance(tool_option, str):
+            tool_option = CompressionToolOption(tool_option)
+        _map = {
+            CompressionToolOption.ZIP: ZipCompressionTool(),
+            CompressionToolOption.GZIP: GzipCompressionTool(),
+        }
+        return _map[tool_option]
 
 
 class TrainingDataTypeOption(str, Enum):
@@ -34,57 +46,60 @@ class BaseConfig(BaseModel):
         return TypeAdapter(cls).validate_python(data)
 
 
-class ServerConfig(BaseConfig):
-    __config__filename__ = 'server.json'
+class DbConfig(BaseModel):
+    name: str
+    host: str
+    port: int
+    dbms: str
+    user: str
+    password: str
+    verbose: bool = False
 
-    class DbConfig(BaseModel):
-        name: str
-        host: str
-        port: int
-        dbms: str
-        user: str
-        password: str
-        verbose: bool = False
 
-    class AIModelConfig(BaseModel):
-        class TrainingConfig(BaseModel):
-            class TrainingDataConfig(BaseModel):
-                type: TrainingDataTypeOption = TrainingDataTypeOption.FILE
-                path: str = '$data/log.xlsx'
+class PersistenceConfig(BaseModel):
+    class CompressionConfig(BaseModel):
+        enable: bool = True
+        tool: CompressionToolOption = CompressionToolOption.ZIP
+        compress_latest_model: bool = False
 
-                @cached_property
-                @resolve_variables_in_path
-                def resolved_path(self) -> Path:
-                    return Path(self.path)
+    directory: str = '$root/archive'
+    max_saved_models: int | None = None
+    compression: CompressionConfig
+    enable: bool = True
 
-            cron_string: str
-            run_on_start: bool = False
-            data: TrainingDataConfig
+    @cached_property
+    @create_dir_if_not_exists
+    @resolve_variables_in_path
+    def resolved_directory(self) -> Path:
+        return Path(self.directory)
 
-        class PersistenceConfig(BaseModel):
-            class CompressionConfig(BaseModel):
-                enable: bool = True
-                tool: CompressionToolOption = CompressionToolOption.ZIP
-                compress_latest_model: bool = False
 
-            directory: str = '$root/archive'
-            max_saved_models: int | None = None
-            compression: CompressionConfig
-            enable: bool = True
+class AIModuleConfig(BaseModel):
+    class TrainingConfig(BaseModel):
+        class TrainingDataConfig(BaseModel):
+            type: TrainingDataTypeOption = TrainingDataTypeOption.FILE
+            path: str = '$data/log.xlsx'
 
             @cached_property
-            @create_dir_if_not_exists
             @resolve_variables_in_path
-            def resolved_directory(self) -> Path:
-                return Path(self.directory)
+            def resolved_path(self) -> Path:
+                return Path(self.path)
 
-        training: TrainingConfig
-        persistence: PersistenceConfig
+        cron_string: str
+        run_on_start: bool = False
+        data: TrainingDataConfig
+
+    training: TrainingConfig
+    persistence: PersistenceConfig
+
+
+class ServerConfig(BaseConfig):
+    __config__filename__ = 'server.json'
 
     host: str
     port: int
     database: DbConfig
-    ai_model: AIModelConfig
+    ai_module: AIModuleConfig
     dev_mode: bool = False
 
 
