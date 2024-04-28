@@ -10,6 +10,6 @@ class AiModel:
     def train(self, df : pd.DataFrame) -> np.ndarray:
         pass
     
-    def evaluate(self, row: pd.DataFrame):
+    def evaluate(self, row: pd.DataFrame) -> int:
         pass
     

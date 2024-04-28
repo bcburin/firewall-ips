@@ -1,4 +1,4 @@
-from lightgbm import LGBMClassifier
+from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 import numpy as np
@@ -8,21 +8,19 @@ from ai_model import AiModel
 from dataset import stratified_sample
 
 
-class LightgbmModel(AiModel):
-    def __init__(self, objective: str, num_class : int, boosting_type: str, num_leaves: int, learning_rate: float,
-                 n_estimators: int, max_depth: int, verbose: int) -> None:
+class RandomForestModel(AiModel):
+    def __init__(self, n_estimator: int, criterion : str, min_sample_split: int, min_samples_leaf: int, 
+                 bootstrap: bool, verbose: int, n_class) -> None:
         super().__init__()
-        self.model = LGBMClassifier(
-            objective = objective,
-            num_class=num_class,
-            boosting_type=boosting_type,
-            num_leaves=num_leaves,
-            learning_rate=learning_rate,
-            n_estimators=n_estimators,
-            max_depth=max_depth,
+        self.model = RandomForestClassifier(
+            n_estimators=n_estimator,
+            criterion=criterion,
+            min_samples_split=min_sample_split,
+            min_samples_leaf=min_samples_leaf,
+            bootstrap=bootstrap,
             verbose=verbose
         )
-        self.n_class = num_class
+        self.n_class = n_class
 
     def train(self, df : pd.DataFrame) -> np.ndarray:
         df = stratified_sample(df, 10000, self.n_class)

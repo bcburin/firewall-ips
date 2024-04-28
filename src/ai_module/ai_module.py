@@ -11,7 +11,7 @@ class AiModule:
     def __init__(self, model : AiModel) -> None:
         self.model : AiModel = model
     
-    def load(self, model_bytes) -> None:
+    def load(self, model_bytes: bytes) -> None:
         self.model = pickle.loads(model_bytes)
         
     def get(self) -> bytes:
@@ -22,3 +22,6 @@ class AiModule:
     
     def evaluate(self, row: pd.DataFrame) -> int:
         return self.model.evaluate(row)
+    
+    def change_model(self, model: AiModel) -> None:
+        self.model = model

@@ -58,5 +58,11 @@ def split_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series,
     return train_test_split(X, y, test_size=0.2)
 
 
-
+def stratified_sample(df: pd.DataFrame, k: int, n_classes: int) -> pd.DataFrame:
+    df_sampled = pd.DataFrame()
+    for i in range(n_classes):
+        df_aux = df[df['label'] == i]
+        df_aux = df_aux.sample(n = k)
+        df_sampled = pd.concat([df_sampled, df_aux])
+    return df_sampled
 
