@@ -1,4 +1,4 @@
-import joblib
+import pickle
 
 from lightgbm import LGBMClassifier
 import pandas as pd
@@ -38,9 +38,8 @@ class LightgbmModule(AiModule):
     def evaluate(self, row: pd.DataFrame) -> int:
         return self.model.predict(row)[0]
     
-    def load(self) -> None:
-        joblib.dump(self.model, 'model.pkl')
+    def load(self, model_bytes) -> None:
+        self.model = pickle.loads(model_bytes)
 
-    def get(self) -> None:
-        self.model = joblib.load('model.pkl')
-        
+    def get(self) -> bytes:
+        return pickle.dumps(self.model)     

@@ -23,9 +23,9 @@ def add_graph_metrics(df : pd.DataFrame, col1: int, col2: int) -> pd.DataFrame:
             n_union = get_union_neighbors_size(graph, row[col1], row[col2])
             n_neigbors_source = get_neighbors_size(graph, row[col1])
             n_neigbors_dest = get_neighbors_size(graph, row[col2])
-            jaccard_index = n_common/n_union
-            salton_index = n_common/math.sqrt(n_neigbors_dest * n_neigbors_source)
-            sorosen_index = n_common/(n_neigbors_source + n_neigbors_dest)
+            jaccard_index = n_common/max(n_union,1)
+            salton_index = n_common/max(math.sqrt(n_neigbors_dest * n_neigbors_source),1)
+            sorosen_index = n_common/max((n_neigbors_source + n_neigbors_dest),1)
             new_dataframe.append([n_common, jaccard_index, salton_index, sorosen_index])
             pbar.update(1)
     extra_df = pd.DataFrame(new_dataframe, columns=['common neighbors' + col1, 'jaccard index' + col1, 'salton index' + col1, 'sorosen index' + col1])
@@ -49,7 +49,8 @@ def split_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series,
 
 def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     df = prepare_label(data)
-    df['NAT translation'] = df.apply(lambda row: row['Source Port'] == row['NAT Source Port'] or row['Destination Port'] == row['NAT Destination Port'], axis=1)
+    df['NAT translation source'] = df.apply(lambda row: row['Source Port'] == row['NAT Source Port'], axis=1)
+    df['NAT translation destination'] = df.apply(lambda row:row['Destination Port'] == row['NAT Destination Port'], axis=1)
     df = add_graph_metrics(df, 'Source Port', 'Destination Port')
     df = add_graph_metrics(df, 'NAT Source Port', 'NAT Destination Port')
     df = normalize_data(df)
