@@ -1,14 +1,11 @@
-import pickle
-
 from lightgbm import LGBMClassifier
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 import numpy as np
+from sklearn.model_selection import cross_val_predict
 
-from ai_module import AiModule
-from dataset import split_data
-
-class LightgbmModule(AiModule):
+from ai_model import AiModel
+class LightgbmModel(AiModel):
 
     def __init__(self, objective: str, num_class : int, metric: str, boosting_type: str, num_leaves: int, learning_rate: float,
                  n_estimators: int, max_depth: int, feature_fraction : float, bagging_fraction: float, bagging_freq: int, verbose: int) -> None:
@@ -29,17 +26,11 @@ class LightgbmModule(AiModule):
         )
 
     def train(self, df : pd.DataFrame) -> np.ndarray:
-        X_train, X_test, y_train, y_test = split_data(df=df)
-        self.model.fit(X_train, y_train)
-        y_pred = self.model.predict(X_test)
-        cm = confusion_matrix(y_test, y_pred)
-        return cm
-    
+        X = df.drop('label', axis=1) 
+        y = df['label']
+        predicted = cross_val_predict(self.model, X, y, cv=5)
+        return confusion_matrix(y, predicted)
+
+
     def evaluate(self, row: pd.DataFrame) -> int:
         return self.model.predict(row)[0]
-    
-    def load(self, model_bytes) -> None:
-        self.model = pickle.loads(model_bytes)
-
-    def get(self) -> bytes:
-        return pickle.dumps(self.model)     

@@ -3,6 +3,7 @@ import math
 import pandas as pd
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import recall_score, precision_score, f1_score
 
 from graph import create_graph, get_common_neighbors_size, get_neighbors_size, get_union_neighbors_size
 
@@ -41,12 +42,6 @@ def normalize_data(df : pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def split_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    X = df.drop('label', axis=1) 
-    y = df['label']
-    return train_test_split(X, y, test_size=0.2)
-
-
 def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     df = prepare_label(data)
     df['NAT translation source'] = df.apply(lambda row: row['Source Port'] == row['NAT Source Port'], axis=1)
@@ -57,8 +52,10 @@ def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-
-
+def split_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    X = df.drop('label', axis=1) 
+    y = df['label']
+    return train_test_split(X, y, test_size=0.2)
 
 
 
