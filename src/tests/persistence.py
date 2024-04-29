@@ -1,7 +1,8 @@
 import pickle
 
 from src.common.config import PersistenceConfig, ServerConfig
-from src.services.persistence import PersistableObjectLifeCycleManager, PersistableObject
+from src.services.persistence import PersistableObjectLifeCycleManager
+from src.common.persistence import PersistableObject
 
 
 class TestClass(PersistableObject):
