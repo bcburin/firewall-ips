@@ -6,15 +6,15 @@ import numpy as np
 from ai_model import AiModel
 
 
-class AiModule:
+class AiModule():
 
     def __init__(self, model : AiModel) -> None:
         self.model : AiModel = model
     
-    def load(self, model_bytes: bytes) -> None:
+    def _load(self, model_bytes: bytes) -> None:
         self.model = pickle.loads(model_bytes)
         
-    def get(self) -> bytes:
+    def _dump(self) -> bytes:
         return pickle.dumps(self.model)     
 
     def train(self,  df : pd.DataFrame) -> np.ndarray:
