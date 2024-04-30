@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix
 import numpy as np
 from sklearn.model_selection import cross_val_predict
 
-from ai_model import AiModel
+from src.ai_module.ai_model import AiModel
 
 
 class RandomForestModel(AiModel):

@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-from ai_model_abstract import AiModelInterface
-from utils.dataset import stratified_sample
+from src.ai_module.ai_model_abstract import AiModelInterface
+from src.ai_module.utils.dataset import stratified_sample
 
 
 class AiModel(AiModelInterface):

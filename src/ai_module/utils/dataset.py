@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
-from utils.graph import create_graph, get_common_neighbors_size, get_neighbors_size, get_union_neighbors_size
+from src.ai_module.utils.graph import create_graph, get_common_neighbors_size, get_neighbors_size, get_union_neighbors_size
 
 
 def prepare_label(df: pd.DataFrame) -> pd.DataFrame:

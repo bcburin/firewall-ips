@@ -3,10 +3,10 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from ai_model import AiModel
+from src.ai_module.ai_model import AiModel
+from src.services.persistence import PersistableObject
 
-
-class AiModule():
+class AiModule(PersistableObject):
 
     def __init__(self, model : AiModel) -> None:
         self.model : AiModel = model
