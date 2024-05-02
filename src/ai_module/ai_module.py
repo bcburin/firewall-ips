@@ -4,9 +4,8 @@ import pandas as pd
 import numpy as np
 
 from src.ai_module.ai_model import AiModel
-from src.services.persistence import PersistableObject
 
-class AiModule(PersistableObject):
+class AiModule():
 
     def __init__(self, model : AiModel) -> None:
         self.model : AiModel = model
