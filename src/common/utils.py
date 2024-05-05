@@ -35,12 +35,14 @@ def get_project_dir() -> Path:
 
 get_data_dir = get_subdir_factory('data')
 get_config_dir = get_subdir_factory('config')
+get_statics_dir = get_subdir_factory('statics')
 
 
 _path_vars = {
     '$root': get_project_dir(),
     '$data': get_data_dir(),
     '$config': get_config_dir(),
+    '$statics': get_statics_dir(),
 }
 
 

@@ -74,6 +74,39 @@ class PersistenceConfig(BaseModel):
         return Path(self.directory)
 
 
+class EmailNotificationConfig(BaseModel):
+
+    class SmtpConfig(BaseModel):
+        server: str
+        port: int
+        ehlo: str | None = None
+
+    class SenderConfig(BaseModel):
+        email: str
+        password: str
+
+    enable: bool = True
+    subject: str
+    template_path: str
+    smtp: SmtpConfig
+    sender: SenderConfig
+    mailing_list: list[str]
+
+    @cached_property
+    @resolve_variables_in_path
+    def resolved_template_path(self) -> Path:
+        return Path(self.template_path)
+
+
+class NotificationConfig(BaseModel):
+    class MethodsConfig(BaseModel):
+        email: EmailNotificationConfig | None = None
+
+    enable: bool = True
+    max_queue_size: int = 128
+    methods: MethodsConfig
+
+
 class AIModuleConfig(BaseModel):
     class TrainingConfig(BaseModel):
         class TrainingDataConfig(BaseModel):
@@ -100,6 +133,7 @@ class ServerConfig(BaseConfig):
     port: int
     database: DbConfig
     ai_module: AIModuleConfig
+    notification: NotificationConfig
     dev_mode: bool = False
 
 

@@ -30,5 +30,24 @@
             }
         }
     },
+    "notification": {
+        "enable": true,
+        "maxQueueSize": 128,
+        "methods": {
+            "email": {
+                "subject": "Suspect packages: firewall rules created [{n}]",
+                "templatePath": "$statics/fw-rule-email-template.html.jinja2",
+                "smtp": {
+                    "server": "127.0.0.1",
+                    "port": 1025
+                },
+                "sender": {
+                    "email": "test.user@mailpit.com",
+                    "password": "password"
+                },
+                "mailingList": ["user1@mailpit.com", "user2@mailpit.com"]
+            }
+        }
+    },
     "devMode": true
 }
