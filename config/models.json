@@ -1,0 +1,12 @@
+{
+  "lightgbm": [
+    {
+      "numClass": 3,
+      "objective": "multiclass",
+      "boostingType": "gbdt",
+      "numLeaves": 31,
+      "learningRate": 0.05,
+      "nEstimators": 100
+    }
+  ]
+}

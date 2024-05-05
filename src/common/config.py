@@ -137,6 +137,26 @@ class ServerConfig(BaseConfig):
     dev_mode: bool = False
 
 
+class BaseAIModelConfig(BaseModel):
+    num_class: int
+
+
+class LightgbmConfig(BaseAIModelConfig):
+    objective: str
+    boosting_type: str
+    num_leaves: int
+    learning_rate: float
+    n_estimators: int
+    max_depth: int = -1
+    verbose: int = -1
+
+
+class AIModelsTrainingConfig(BaseConfig):
+    __config__filename__ = 'models.json'
+
+    lightgbm: list[LightgbmConfig]
+
+
 if __name__ == '__main__':
     sc = ServerConfig.get()
     print(sc)

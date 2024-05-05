@@ -15,7 +15,8 @@ from src.ai_module.models.svm_model import SVM
 from src.ai_module.models.logistic_regression_model import LogisticRegressionClassifier
 from src.ai_module.models.multilayer_perceptron_model import MultiLayerPerceptron
 from src.ai_module.ai_module import AiModule
- 
+from src.common.config import AIModelsTrainingConfig, ServerConfig
+
 
 def print_results(cm: np.ndarray) -> None:
     print(cm)
@@ -32,11 +33,12 @@ def print_results(cm: np.ndarray) -> None:
 
 
 if __name__ == "__main__":
-    data_path = "C:/Users/jpcar/OneDrive/Documentos/Área de Trabalho/IME/Profissional/Nono periodo/PFC/code/Firewall-Rules-Predictions/data/log.xlsx"
+    server_config: ServerConfig = ServerConfig.get()
+    data_path = server_config.ai_model.training.data.resolved_path
     data = pd.read_excel(data_path)
-    df =  prepare_data(data)
-    ai_model = LightgbmModel(num_class=3, boosting_type='gbdt',objective='multiclass',num_leaves=31,
-                                learning_rate=0.05, n_estimators=100, max_depth=-1, verbose=-1)
+    df = prepare_data(data)
+    model_training_config: AIModelsTrainingConfig = AIModelsTrainingConfig.get()
+    ai_model = LightgbmModel(config=model_training_config.lightgbm[0])
     
     ai_module = AiModule(ai_model)
     cm = ai_module.train(df.copy())
