@@ -11,7 +11,7 @@ from src.common.config import LightgbmConfig
 class LightgbmModel(AiModel):
     def __init__(self, config: LightgbmConfig) -> None:
         super().__init__(config.num_class)
-        self.model = LGBMClassifier(**config.dict())
+        self.model = LGBMClassifier(**config.model_dump())
 
     def train(self, df : pd.DataFrame) -> np.ndarray:
         X, y = self.sample_data(df)
