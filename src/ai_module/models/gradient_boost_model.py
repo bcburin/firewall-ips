@@ -24,6 +24,5 @@ class Xgbbost(AiModel):
         predicted = cross_val_predict(self.model, X, y, cv=5)
         return confusion_matrix(y, predicted)
 
-
     def evaluate(self, row: pd.DataFrame) -> int:
         return self.model.predict(row)[0]

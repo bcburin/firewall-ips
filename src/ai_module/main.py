@@ -34,30 +34,11 @@ def print_results(cm: np.ndarray) -> None:
 
 if __name__ == "__main__":
     server_config: ServerConfig = ServerConfig.get()
-    data_path = server_config.ai_model.training.data.resolved_path
+    data_path = server_config.ai_module.training.data.resolved_path
     data = pd.read_excel(data_path)
     df = prepare_data(data)
     model_training_config: AIModelsTrainingConfig = AIModelsTrainingConfig.get()
     ai_model = LightgbmModel(config=model_training_config.lightgbm[0])
-    
     ai_module = AiModule(ai_model)
-    cm = ai_module.train(df.copy())
-    print_results(cm)
-    ai_model = RandomForestModel(n_estimator=100,criterion="log_loss", min_sample_split=2, min_samples_leaf=1,
-                                 bootstrap=True, verbose=0, n_class=3)
-    ai_module.change_model(ai_model)
-    cm = ai_module.train(df.copy())
-    print_results(cm)
-    ai_model = Xgbbost(n_class=3, loss="log_loss", learning_rate= 0.1, n_estimator=100,subsample=0.5, max_depth=10)
-    ai_module.change_model(ai_model)
-    cm = ai_module.train(df.copy())
-    print_results(cm)
-    ai_model = SVM(n_class=3, C = 1, kernel="linear", degree=3)
-    ai_module.change_model(ai_model)
-    cm = ai_module.train(df.copy())
-    print_results(cm)
-    ai_model = MultiLayerPerceptron(n_class=3, hidden_layer_size=100, activation='relu', solver='adam',
-                                     learning_rate='adaptive', momentum=0.9, early_stop=True)
-    ai_module.change_model(ai_model)
     cm = ai_module.train(df.copy())
     print_results(cm)

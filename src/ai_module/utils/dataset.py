@@ -1,6 +1,7 @@
 import math
 
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
@@ -14,7 +15,7 @@ def prepare_label(df: pd.DataFrame) -> pd.DataFrame:
     return df.dropna()
 
 
-def add_graph_metrics(df : pd.DataFrame, col1: int, col2: int) -> pd.DataFrame:
+def add_graph_metrics(df : pd.DataFrame, col1: str, col2: str) -> pd.DataFrame:
     graph = create_graph(df, col1, col2)
     new_dataframe = []
     with tqdm(total= len(df)) as pbar:
@@ -33,13 +34,6 @@ def add_graph_metrics(df : pd.DataFrame, col1: int, col2: int) -> pd.DataFrame:
     return df.drop([col1, col2], axis = 1)
 
 
-def normalize_data(df : pd.DataFrame) -> pd.DataFrame:
-    label = df['label']
-    df = df.drop('label', axis=1)
-    df = (df-df.mean())/df.std()
-    df['label'] = label
-    return df
-
 
 def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     df = prepare_label(data)
@@ -47,7 +41,6 @@ def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     df['NAT translation destination'] = df.apply(lambda row:row['Destination Port'] == row['NAT Destination Port'], axis=1)
     df = add_graph_metrics(df, 'Source Port', 'Destination Port')
     df = add_graph_metrics(df, 'NAT Source Port', 'NAT Destination Port')
-    df = normalize_data(df)
     return df
 
 
@@ -64,4 +57,9 @@ def stratified_sample(df: pd.DataFrame, k: int, n_classes: int) -> pd.DataFrame:
         df_aux = df_aux.sample(n = k)
         df_sampled = pd.concat([df_sampled, df_aux])
     return df_sampled
+
+
+def create_categorical_feature(df: pd.DataFrame, bins: list, labels: list, col: str):
+    df[col + '_Category'] = pd.cut(df[col], bins=bins, labels=labels, right=False)
+    return df.drop([col], axis = 1)
 
