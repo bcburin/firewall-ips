@@ -142,19 +142,55 @@ class BaseAIModelConfig(BaseModel):
 
 
 class LightgbmConfig(BaseAIModelConfig):
-    objective: str
-    boosting_type: str
-    num_leaves: int
-    learning_rate: float
-    n_estimators: int
-    max_depth: int = -1
-    verbose: int = -1
+    objective: list[str]
+    boosting_type: list[str]
+    num_leaves: list[int]
+    learning_rate: list[float]
+    n_estimators: list[int]
+
+
+class GradientBoostConfig(BaseAIModelConfig):
+    loss: list[str]
+    learning_rate: list[float]
+    n_estimators: list[int]
+    subsample: list[float]
+    max_depth: list[int]
+
+
+class LogisticRegressionConfig(BaseAIModelConfig):
+    penalty: list[str]
+
+
+class MultiLayerPerceptronConfig(BaseAIModelConfig):
+    solver: list[str]
+    hidden_layer: list[int]
+    activation: list[str]
+    learning_rate: list[str]
+    learning_rate_init: list[float]
+    momentum: list[float]
+    early_stopping: list[bool]
+
+
+class RandomForestConfig(BaseAIModelConfig):
+    n_estimators: list[int]
+    criterion: list[str]
+
+
+class SVMConfig(BaseAIModelConfig):
+    kernel: list[str]
+    degree: list[int]
 
 
 class AIModelsTrainingConfig(BaseConfig):
     __config__filename__ = 'models.json'
 
     lightgbm: list[LightgbmConfig]
+    gradientboost: list[GradientBoostConfig]
+    logisticregression: list[LogisticRegressionConfig]
+    multilayerperceptron: list[MultiLayerPerceptronConfig]
+    randomforest: list[RandomForestConfig]
+    svm: list[SVMConfig]
+
 
 
 if __name__ == '__main__':

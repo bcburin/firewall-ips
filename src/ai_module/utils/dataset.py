@@ -34,6 +34,13 @@ def add_graph_metrics(df : pd.DataFrame, col1: str, col2: str) -> pd.DataFrame:
     return df.drop([col1, col2], axis = 1)
 
 
+def normalize_data(df : pd.DataFrame) -> pd.DataFrame:
+    label = df['label']
+    df = df.drop('label', axis=1) 
+    df = (df - df.mean()) / df.std()
+    df['label'] = label
+    return df
+
 
 def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     df = prepare_label(data)
@@ -41,7 +48,7 @@ def prepare_data(data : pd.DataFrame) -> pd.DataFrame:
     df['NAT translation destination'] = df.apply(lambda row:row['Destination Port'] == row['NAT Destination Port'], axis=1)
     df = add_graph_metrics(df, 'Source Port', 'Destination Port')
     df = add_graph_metrics(df, 'NAT Source Port', 'NAT Destination Port')
-    return df
+    return normalize_data(df)
 
 
 def split_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
