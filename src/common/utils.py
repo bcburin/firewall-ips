@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from functools import cache
 from pathlib import Path
 from typing import Callable
+import inspect
+
 
 
 def create_dir_if_not_exists(f: Callable[..., Path]) -> Callable[..., Path]:
@@ -121,3 +123,10 @@ class GzipCompressionTool(CompressionTool):
         with gzip.open(compressed_filepath, 'rb') as f_in:
             with open(output_filepath, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
+
+
+def filter_dict(dict_to_filter, thing_with_kwargs):
+    sig = inspect.signature(thing_with_kwargs)
+    filter_keys = [param.name for param in sig.parameters.values() if param.kind == param.POSITIONAL_OR_KEYWORD]
+    filtered_dict = {filter_key:dict_to_filter[filter_key] for filter_key in filter_keys if filter_key in dict_to_filter}
+    return filtered_dict

@@ -2,32 +2,28 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 
-def get_nodes(df: pd.DataFrame, col : str, graph : nx.Graph) -> None:
+
+def add_nodes(df: pd.DataFrame, col : str, graph : nx.DiGraph) -> None:
     for node in df[col].unique():
         if np.isnan(node):
             continue
         graph.add_node(node)
 
 
-def add_nodes(graph : nx.Graph, df : pd.DataFrame, col_source_node : str, col_destination_node : str) -> None:
-    get_nodes(df, col_source_node, graph)
-    get_nodes(df, col_destination_node, graph)
-
-
-
-def add_edges(graph : nx.Graph, df : pd.DataFrame, col_source_node : str, col_destination_node : str) -> None:
+def add_edges(graph : nx.DiGraph, df : pd.DataFrame, col_source_node : str, col_destination_node : str) -> None:
     for _, row in df.iterrows():
         graph.add_edge(row[col_source_node], row[col_destination_node])
 
 
-def create_graph(df: pd.DataFrame, col_source_node : str, col_destination_node : str) -> nx.Graph:
-    graph = nx.Graph()
-    add_nodes(graph, df, col_source_node, col_destination_node)
+def create_graph(df: pd.DataFrame, col_source_node : str, col_destination_node : str) -> nx.DiGraph:
+    graph = nx.DiGraph()
+    add_nodes(df, col_source_node, graph)
+    add_nodes(df, col_destination_node, graph)
     add_edges(graph, df, col_source_node, col_destination_node)
     return graph
 
 
-def get_common_neighbors(graph : nx.Graph, node1: int, node2: int) -> int:
+def get_common_neighbors_size(graph : nx.DiGraph, node1: int, node2: int) -> int:
     neighbor1 = graph.neighbors(node1)
     neighbor2 = graph.neighbors(node2)
     if not neighbor1 or not neighbor2:
@@ -49,7 +45,7 @@ def get_common_neighbors(graph : nx.Graph, node1: int, node2: int) -> int:
     return len(common_neighbor)
 
 
-def get_union_neigbors(graph : nx.Graph, node1: int, node2: int) -> int:
+def get_union_neighbors_size(graph : nx.DiGraph, node1: int, node2: int) -> int:
     neighbor1 = sorted(list(graph.neighbors(node1)))
     neighbor2 = sorted(list(graph.neighbors(node2)))
     set1 = set(neighbor1)
@@ -58,5 +54,5 @@ def get_union_neigbors(graph : nx.Graph, node1: int, node2: int) -> int:
     return len(union_neigbors)
 
 
-def get_neigbors(graph : nx.Graph, node1: int) -> int:
+def get_neighbors_size(graph : nx.DiGraph, node1: int) -> int:
     return len(list(graph.neighbors(node1)))     

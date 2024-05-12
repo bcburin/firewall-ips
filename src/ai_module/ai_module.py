@@ -1,18 +1,26 @@
+import pickle
 
+import pandas as pd
+import numpy as np
 
-class AiModule:
+from src.ai_module.ai_model import AiModel
 
-    def __init__(self) -> None:
-        pass
+class AiModule():
 
-    def train(self) -> None:
-        raise NotImplementedError("This functionality is not implemented yet")
+    def __init__(self, model : AiModel) -> None:
+        self.model : AiModel = model
     
-    def load(self) -> None:
-        raise NotImplementedError("This functionality is not implemented yet")
+    def _load(self, model_bytes: bytes) -> None:
+        self.model = pickle.loads(model_bytes)
+        
+    def _dump(self) -> bytes:
+        return pickle.dumps(self.model)     
+
+    def train(self,  df : pd.DataFrame) -> np.ndarray:
+        return self.model.train(df=df)
     
-    def evaluate(self):
-        raise NotImplementedError("This functionality is not implemented yet")
+    def evaluate(self, row: pd.DataFrame) -> int:
+        return self.model.evaluate(row)
     
-    def get(self):
-        raise NotImplementedError("This functionality is not implemented yet")
+    def change_model(self, model: AiModel) -> None:
+        self.model = model
