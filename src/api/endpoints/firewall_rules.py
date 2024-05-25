@@ -24,36 +24,3 @@ def get_all(
 @router.get('/{id}', response_model=FirewallRuleOutModel)
 def get_by_id(id: int, session: Session = Depends(get_session)):
     return FirewallRuleService(session=session).get_by_id(id_value=id)
-
-
-@router.post('/', response_model=FirewallRuleOutModel)
-def create(item: FirewallRuleCreateModel, session: Session = Depends(get_session)):
-    return FirewallRuleService(session=session).create(obj=item)
-
-
-@router.put('/{id}', response_model=FirewallRuleOutModel)
-def update(id: int, item: FirewallRuleUpdateModel, session: Session = Depends(get_session)):
-    if not item.has_updates():
-        raise NoUpdatesProvidedDbException(origin=ENTITY)
-    service = FirewallRuleService(session=session)
-    db_item = service.get_by_id(id_value=id)
-    if not db_item:
-        raise NotFoundDbException(origin=ENTITY)
-    return service.update(db_obj=db_item, obj=item)
-
-
-@router.delete('/{id}', response_model=FirewallRuleOutModel)
-def delete(id: int, session: Session = Depends(get_session)):
-    item = FirewallRuleService(session=session).remove(pk=id)
-    if not item:
-        raise NotFoundDbException(origin=ENTITY)
-    return item
-
-
-@router.delete('/', response_model=list[FirewallRuleOutModel])
-def delete_multiple(ids: list[int], session: Session = Depends(get_session)):
-    deleted_users = []
-    for pk in ids:
-        deleted_user = FirewallRuleService(session=session).remove(pk=pk)
-        deleted_users.append(deleted_user)
-    return deleted_users
