@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
 from src.common.exceptions.db import NotFoundDbException, NoUpdatesProvidedDbException
-from src.models.critical_rule import CriticalRule, CriticalRuleCreateModel, CriticalRuleUpdateModel, \
+from src.models.critical_rule import CriticalRuleCreateModel, CriticalRuleUpdateModel, \
     CriticalRuleOutModel
 from src.services.models import CriticalRuleService
 from src.services.database import get_session

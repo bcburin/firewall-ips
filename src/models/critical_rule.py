@@ -1,7 +1,7 @@
 from sqlalchemy import Column
 from sqlmodel import SQLModel, Field, Enum as SQLModelEnum
 
-from src.models.base import BaseSQLModel, BaseUpdateModel
+from src.models.base import BaseOutModel, BaseUpdateModel
 from src.models.enums import Action
 
 
@@ -19,7 +19,7 @@ class CriticalRuleCreateModel(CriticalRuleBaseModel):
     pass
 
 
-class CriticalRuleOutModel(CriticalRuleBaseModel):
+class CriticalRuleOutModel(CriticalRuleBaseModel, BaseOutModel):
     pass
 
 
@@ -28,5 +28,5 @@ class CriticalRuleUpdateModel(CriticalRuleBaseModel, BaseUpdateModel, table=Fals
     title: str | None = None
 
 
-class CriticalRule(CriticalRuleBaseModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+class CriticalRule(CriticalRuleOutModel, table=True):
+    pass

@@ -2,7 +2,7 @@ from sqlalchemy import Column
 from sqlmodel import SQLModel, Field, Enum as SQLModelEnum
 
 from src.common.notification import NotifiableObject
-from src.models.base import BaseSQLModel, BaseUpdateModel
+from src.models.base import BaseUpdateModel, BaseOutModel
 from src.models.enums import Action
 
 
@@ -22,9 +22,9 @@ class FirewallRuleUpdateModel(FirewallRuleBaseModel, BaseUpdateModel):
     action: Action | None = Field(sa_column=Column(SQLModelEnum(Action)), default=None)
 
 
-class FirewallRuleOutModel(FirewallRuleBaseModel, NotifiableObject):
+class FirewallRuleOutModel(FirewallRuleBaseModel, BaseOutModel, NotifiableObject):
     pass
 
 
-class FirewallRule(FirewallRuleBaseModel, BaseSQLModel, table=True):
+class FirewallRule(FirewallRuleOutModel, table=True):
     pass
