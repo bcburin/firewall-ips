@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import json
 from enum import Enum
-from functools import cache, cached_property
+from functools import cached_property
 from pathlib import Path
-from typing import TypeVar, Type
+from typing import TypeVar, Type, Annotated
 
-from pydantic import BaseModel, TypeAdapter
+from fastapi import Depends
+from pydantic import BaseModel, TypeAdapter, Field
 
+from src.common.exceptions.config import ConfigurationNotLoaded
 from src.common.utils import get_config_dir, convert_dict_keys_camel_to_snake, \
-    resolve_variables_in_path, create_dir_if_not_exists, CompressionTool, ZipCompressionTool, GzipCompressionTool
+    resolve_variables_in_path, create_dir_if_not_exists, CompressionTool, ZipCompressionTool, GzipCompressionTool, \
+    Singleton
 
 
 class CompressionToolOption(str, Enum):
@@ -39,8 +42,11 @@ class BaseConfig(BaseModel):
     __config__filename__ = None
 
     @classmethod
-    @cache
-    def get(cls: Type[T]) -> T:
+    def get(cls):
+        raise NotImplemented
+
+    @classmethod
+    def read_file(cls: Type[T]) -> T:
         with open(get_config_dir() / cls.__config__filename__) as f:
             data = convert_dict_keys_camel_to_snake(json.load(f))
         return TypeAdapter(cls).validate_python(data)
@@ -126,6 +132,22 @@ class AIModuleConfig(BaseModel):
     persistence: PersistenceConfig
 
 
+class AuthConfig(BaseModel):
+
+    class TokenConfig(BaseModel):
+        key: str
+        algorithm: str
+        expiration_time_in_minutes: int = Field(gt=0, default=360)
+
+    class LoginConfig(BaseModel):
+        method: str
+        max_login_tries: int | None = None
+        notify_on_max_tries: bool = True
+
+    token: TokenConfig
+    login: LoginConfig
+
+
 class ServerConfig(BaseConfig):
     __config__filename__ = 'server.json'
 
@@ -135,6 +157,7 @@ class ServerConfig(BaseConfig):
     ai_module: AIModuleConfig
     notification: NotificationConfig
     dev_mode: bool = False
+    authentication: AuthConfig
 
 
 class BaseAIModelConfig(BaseModel):
@@ -192,7 +215,28 @@ class AIModelsTrainingConfig(BaseConfig):
     svm: list[SVMConfig]
 
 
+class ConfigurationManager(metaclass=Singleton):
 
-if __name__ == '__main__':
-    sc = ServerConfig.get()
-    print(sc)
+    def __init__(self):
+        self._server_config: ServerConfig | None = None
+
+    def load_configs(self):
+        self._server_config = ServerConfig.read_file()
+
+    def get_server_config(self):
+        if self._server_config is None:
+            raise ConfigurationNotLoaded("cannot retrieve server configs")
+        return self._server_config
+
+
+configuration_manager = ConfigurationManager()
+
+
+InjectedServerConfig = Annotated[
+    ServerConfig, Depends(lambda: configuration_manager.get_server_config())]
+
+InjectedAuthConfig = Annotated[
+    AuthConfig, Depends(lambda: configuration_manager.get_server_config().authentication)]
+
+InjectedTokenConfig = Annotated[
+    AuthConfig.TokenConfig, Depends(lambda: configuration_manager.get_server_config().authentication.token)]

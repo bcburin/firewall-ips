@@ -47,3 +47,10 @@ class NoUpdatesProvidedDbException(DbException):
 
     def get_http_exception(self):
         return HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f'No updates provided for {self.origin}')
+
+
+class DbManagerNotLoadedException(IHTTPExceptionProvider):
+
+    def get_http_exception(self):
+        return HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail=f'Database manager not loaded: cannot access database')
