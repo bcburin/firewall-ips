@@ -35,8 +35,8 @@
         "maxQueueSize": 128,
         "methods": {
             "email": {
-                "subject": "Suspect packages: firewall rules created [{n}]",
-                "templatePath": "$statics/fw-rule-email-template.html.jinja2",
+                "subject": "Pacotes suspeitos: regras de firewall criadas [{n}]",
+                "templatePath": "$statics/fw-rule-email-template-pt.html.jinja2",
                 "smtp": {
                     "server": "127.0.0.1",
                     "port": 1025

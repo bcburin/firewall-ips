@@ -1,0 +1,87 @@
+<!-- email_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificação de criação de regra de firewall</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .message {
+            font-style: italic;
+            color: #666;
+        }
+        .footer {
+            margin-top: 20px;
+            color: #999;
+            font-size: 12px;
+            text-align: center; /* Centering the footer */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Uma nova regra de firewall foi criada</h1>
+        <p>O módulo de IA identificou pacotes suspeitos e solicitou a criação de {{ num_rules }} regras de firewall para retê-los.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Source Port</th>
+                    <th>Destination Port</th>
+                    <th>NAT Source Port</th>
+                    <th>NAT Destination Port</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in firewall_rules %}
+                <tr>
+                    <td>{% if rule.src_port is not none %}{{ rule.src_port }}{% endif %}</td>
+                    <td>{% if rule.des_port is not none %}{{ rule.des_port }}{% endif %}</td>
+                    <td>{% if rule.nat_src_port is not none %}{{ rule.nat_src_port }}{% endif %}</td>
+                    <td>{% if rule.nat_des_port is not none %}{{ rule.nat_des_port }}{% endif %}</td>
+                    <td>{{ rule.action }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p class="message">As solicitações foram feitas sem aprovação humana. Se alguma delas está incorreta, remova-a manualmente do firewall.</p>
+    </div>
+
+    <p class="footer">Mensagem enviada automaticamente, não responda.</p>
+</body>
+</html>
