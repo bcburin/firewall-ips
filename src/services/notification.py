@@ -8,9 +8,10 @@ from typing import Generic, Type
 
 from jinja2 import Environment, FileSystemLoader
 
-from src.common.config import ServerConfig, EmailNotificationConfig, NotificationConfig
+from src.common.config import ServerConfig, EmailNotificationConfig, NotificationConfig, ConfigurationManager
 from src.common.notification import NotifiableObjectType, NotifiableObject
 from src.common.utils import Singleton
+from src.models.enums import Action
 from src.models.firewall_rule import FirewallRuleOutModel
 
 
@@ -18,7 +19,7 @@ class NotificationService(Generic[NotifiableObjectType], ABC):
 
     def __init__(self, notifiable_object_class: Type[NotifiableObject]):
         self._cls = notifiable_object_class
-        self._notifications = Queue(maxsize=ServerConfig.get().notification.max_queue_size)
+        self._notifications = Queue(maxsize=ConfigurationManager().get_server_config().notification.max_queue_size)
 
     def enqueue_notification(self, notification: NotifiableObjectType):
         if not isinstance(notification, self._cls):
@@ -105,7 +106,7 @@ class FWRuleNotificationServiceManager(metaclass=Singleton):
 
     def __init__(self):
         self._notification_services = []
-        config: NotificationConfig = ServerConfig.get().notification
+        config: NotificationConfig = ConfigurationManager().get_server_config().notification
         self._enabled = config.enable
         if not self._enabled:
             return
@@ -119,3 +120,12 @@ class FWRuleNotificationServiceManager(metaclass=Singleton):
     def send_notifications(self):
         for service in self._notification_services:
             service.send_notifications()
+
+
+if __name__ == '__main__':
+    ConfigurationManager().load_configs()
+    manager = FWRuleNotificationServiceManager()
+    manager.enqueue_notification(FirewallRuleOutModel(src_port=100, des_port=567, action=Action.DROP))
+    manager.enqueue_notification(FirewallRuleOutModel(src_port=127, des_port=568, action=Action.BLOCK))
+    manager.enqueue_notification(FirewallRuleOutModel(nat_src_port=100, nat_des_port=200, action=Action.BLOCK))
+    manager.send_notifications()
