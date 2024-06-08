@@ -51,7 +51,7 @@ class IPTablesWriter(FirewallWriter):
         if rule.action == Action.ALLOW:
             rule_str += "-j ACCEPT"
         elif rule.action == Action.BLOCK:
-            rule_str += "-j DENY"
+            rule_str += "-j REJECT"
         elif rule.action == Action.DROP:
             rule_str += "-j DROP"
         return rule_str.strip()
@@ -144,7 +144,7 @@ class IPTablesWriter(FirewallWriter):
             return Action.ALLOW
         if action_str == "DROP":
             return Action.DROP
-        if action_str == "DENY":
+        if action_str == "REJECT":
             return Action.BLOCK
 
     def append_rule(self, rule: FirewallRule):
