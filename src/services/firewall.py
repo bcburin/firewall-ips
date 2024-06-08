@@ -36,6 +36,9 @@ class IPTablesWriter(FirewallWriter):
     @staticmethod
     def _write_iptables_rule(rule: FirewallRule) -> str:
         rule_str = ""
+        # check whether rule is valid
+        if not rule.protocol and (rule.src_port or rule.des_port):
+            raise ValueError("source and destiny ports must specify a protocol")
         # write protocol, source and destiny
         if rule.protocol:
             rule_str += f"-p {rule.protocol} "
