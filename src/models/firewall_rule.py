@@ -7,6 +7,9 @@ from src.models.enums import Action
 
 
 class FirewallRuleBaseModel(SQLModel, table=False):
+    protocol: str | None = None
+    src_address: str | None = None
+    des_address: str | None = None
     src_port: int | None = None
     des_port: int | None = None
     nat_src_port: int | None = None

@@ -13,6 +13,9 @@ MAX_PORT_NUMBER = 65535
 
 
 class CriticalRuleBaseModel(SQLModel, table=False):
+    protocol: str | None = None
+    src_address: str | None = None
+    des_address: str | None = None
     src_port: int | None = Field(default=None, ge=MIN_PORT_NUMBER, le=MAX_PORT_NUMBER)
     des_port: int | None = Field(default=None, ge=MIN_PORT_NUMBER, le=MAX_PORT_NUMBER)
     nat_src_port: int | None = Field(default=None, ge=MIN_PORT_NUMBER, le=MAX_PORT_NUMBER)
