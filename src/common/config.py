@@ -223,9 +223,17 @@ class ConfigurationManager(metaclass=Singleton):
     def load_configs(self):
         self._server_config = ServerConfig.read_file()
 
-    def get_server_config(self):
+    def get_server_config(self, redact_sensitive_data: bool = False):
         if self._server_config is None:
             raise ConfigurationNotLoaded("cannot retrieve server configs")
+        if redact_sensitive_data:
+            config_copy = self._server_config.model_copy(deep=True)
+            config_copy.database.password = "<password>"
+            if config_copy.notification.methods.email:
+                config_copy.notification.methods.email.sender.email = "<email>"
+                config_copy.notification.methods.email.sender.password = "<password>"
+            config_copy.authentication.token.key = "<key>"
+            return config_copy
         return self._server_config
 
 
