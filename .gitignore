@@ -168,3 +168,30 @@ cython_debug/
 *.gz
 #Folder size is bigger than 2.5 Gb
 data/final_data
+
+# client side files
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/client/node_modules
+/client/.pnp
+.pnp.js
+
+# testing
+/client/coverage
+
+# production
+/client/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
