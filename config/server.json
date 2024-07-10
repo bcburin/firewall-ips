@@ -16,7 +16,7 @@
             "runOnStart": false,
             "data": {
                 "type": "file",
-                "path": "$root/data/log.xlsx"
+                "path": "$root/data/final_data"
             }
         },
         "persistence": {

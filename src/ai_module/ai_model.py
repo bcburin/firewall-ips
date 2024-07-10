@@ -5,7 +5,7 @@ from sklearn.model_selection import cross_val_predict
 from abc import ABC, abstractmethod
 from sklearn.model_selection import RandomizedSearchCV
 
-from src.ai_module.utils.dataset import stratified_sample
+from src.ai_module.utils.new_dataset import stratified_sample
 from src.common.config import BaseAIModelConfig
 from src.common.utils import filter_dict
 
@@ -25,8 +25,8 @@ class AiModel(ABC):
 
     def sample_data(self, df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
         df = stratified_sample(df, 10000, self.n_class)
-        x_matrix = df.drop('label', axis=1) 
-        y_vector = df['label']
+        x_matrix = df.drop('Label', axis=1) 
+        y_vector = df['Label']
         return x_matrix,y_vector
 
 

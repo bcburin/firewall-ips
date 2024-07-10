@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import Enum
-from functools import cached_property
+from functools import cached_property, cache
 from pathlib import Path
 from typing import TypeVar, Type, Annotated
 
@@ -42,11 +42,8 @@ class BaseConfig(BaseModel):
     __config__filename__ = None
 
     @classmethod
-    def get(cls):
-        raise NotImplemented
-
-    @classmethod
-    def read_file(cls: Type[T]) -> T:
+    @cache
+    def get(cls: Type[T]) -> T:
         with open(get_config_dir() / cls.__config__filename__) as f:
             data = convert_dict_keys_camel_to_snake(json.load(f))
         return TypeAdapter(cls).validate_python(data)
@@ -165,15 +162,12 @@ class BaseAIModelConfig(BaseModel):
 
 
 class LightgbmConfig(BaseAIModelConfig):
-    objective: list[str]
-    boosting_type: list[str]
     num_leaves: list[int]
     learning_rate: list[float]
     n_estimators: list[int]
 
 
 class GradientBoostConfig(BaseAIModelConfig):
-    loss: list[str]
     learning_rate: list[float]
     n_estimators: list[int]
     subsample: list[float]
@@ -185,11 +179,7 @@ class LogisticRegressionConfig(BaseAIModelConfig):
 
 
 class MultiLayerPerceptronConfig(BaseAIModelConfig):
-    solver: list[str]
     hidden_layer: list[int]
-    activation: list[str]
-    learning_rate: list[str]
-    learning_rate_init: list[float]
     momentum: list[float]
     early_stopping: list[bool]
 

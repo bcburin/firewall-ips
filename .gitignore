@@ -166,3 +166,5 @@ cython_debug/
 *.bytes
 *.zip
 *.gz
+#Folder size is bigger than 2.5 Gb
+data/final_data
