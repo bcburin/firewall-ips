@@ -1,5 +1,5 @@
 import { PaletteOptions, SimplePaletteColorOptions, TypeAction, alpha } from "@mui/material/styles";
-import { error, indigo, info, neutral, success, warning } from "./colors";
+import { darkIndigo, error, info, neutral, success, warning } from "./colors";
 
 import { common } from "@mui/material/colors";
 
@@ -21,7 +21,7 @@ export interface LocalPaletteOptions extends PaletteOptions {
   };
 }
 
-export function createPalette(): LocalPaletteOptions  {
+export function createPalette(): LocalPaletteOptions {
   return {
     action: {
       active: neutral[500],
@@ -40,7 +40,7 @@ export function createPalette(): LocalPaletteOptions  {
     neutral,
     info,
     mode: "light",
-    primary: indigo,
+    primary: darkIndigo,
     success,
     text: {
       primary: neutral[900],
