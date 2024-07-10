@@ -1,3 +1,5 @@
+import type { } from '@mui/x-data-grid/themeAugmentation';
+
 import { Components, Theme } from "@mui/material/styles";
 import {
   createTheme,
@@ -297,6 +299,13 @@ export function createComponents({ palette }: { palette: LocalPaletteOptions }):
       defaultProps: {
         variant: 'filled'
       }
-    }
+    },
+    MuiDataGrid: {
+      styleOverrides: {
+        root: {
+          backgroundColor: palette.grey?.[100]
+        },
+      },
+    },
   };
 }
