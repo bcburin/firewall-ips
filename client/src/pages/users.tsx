@@ -1,43 +1,31 @@
 import { Box, Container, Stack, Typography } from '@mui/material';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
+import React, { useEffect, useState } from 'react';
+import { User, userService } from '../api/user-service';
 
 import ActionsToolbar from '../components/actions-toolbar';
-import DashboardLayout from '../layout/dashboard';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import React from 'react';
+import MainLayout from '../layout/main';
 import ToggleOffRoundedIcon from '@mui/icons-material/ToggleOffRounded';
 import ToggleOnRoundedIcon from '@mui/icons-material/ToggleOnRounded';
 import { useMemo } from 'react';
 
 const UsersPage: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
 
-  const users = [
-    {
-      username: "admin",
-      id: 1,
-      firstName: "Administrator",
-      active: true,
-      loginAttempts: 0,
-      updatedAt: "2024-05-25T19:00:15.313570",
-      email: "admin@ime.eb.br",
-      createdAt: "2024-05-25T19:00:15.313567",
-      lastName: "Admin",
-      lastLogin: "2024-05-25T19:00:15.313570"
-    },
-    {
-      username: "user1",
-      id: 2,
-      firstName: "User",
-      active: false,
-      loginAttempts: 1,
-      updatedAt: "2024-07-10T13:08:39.601083",
-      email: "user1@domain.com",
-      createdAt: "2024-07-10T13:08:39.601078",
-      lastName: "One",
-      lastLogin: "2024-07-10T13:08:39.601078"
+  const getUsersHandler = async () => {
+    try {
+      const fetchedUsers = await userService.getAll();
+      setUsers(fetchedUsers);
+    } catch (e) {
+      console.log(e);
     }
-  ]
+  }
+
+  useEffect(() => {
+    getUsersHandler();
+  }, []);
 
   const columns = useMemo<GridColDef<UserRow>[]>(() => [
     { field: 'id', headerName: 'Id', width: 50 },
@@ -86,7 +74,7 @@ const UsersPage: React.FC = () => {
   type UserRow = (typeof users)[number];
 
   return (
-    <DashboardLayout>
+    <MainLayout>
       <Box
         component="main"
         sx={{
@@ -130,7 +118,7 @@ const UsersPage: React.FC = () => {
           </Stack>
         </Container>
       </Box>
-    </DashboardLayout>
+    </MainLayout>
   );
 };
 
