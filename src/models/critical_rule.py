@@ -2,9 +2,9 @@ from datetime import datetime
 
 from pydantic import model_validator
 from sqlalchemy import Column
-from sqlmodel import SQLModel, Field, Enum as SQLModelEnum
+from sqlmodel import Field, Enum as SQLModelEnum
 
-from src.models.base import BaseOutModel, BaseUpdateModel
+from src.models.base import BaseOutModel, BaseUpdateModel, BaseSQLModel
 from src.models.enums import Action
 
 
@@ -12,7 +12,7 @@ MIN_PORT_NUMBER = 0
 MAX_PORT_NUMBER = 65535
 
 
-class CriticalRuleBaseModel(SQLModel, table=False):
+class CriticalRuleBaseModel(BaseSQLModel, table=False):
     protocol: str | None = None
     src_address: str | None = None
     des_address: str | None = None

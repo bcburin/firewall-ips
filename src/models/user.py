@@ -1,13 +1,9 @@
 from datetime import datetime
 
-from pydantic import EmailStr
-from sqlalchemy import Column, String
-from sqlmodel import SQLModel, AutoString, Field
-
-from src.models.base import BaseUpdateModel, BaseOutModel
+from src.models.base import BaseUpdateModel, BaseOutModel, BaseSQLModel
 
 
-class UserBaseModel(SQLModel):
+class UserBaseModel(BaseSQLModel):
     username: str
     email: str
     first_name: str
@@ -26,12 +22,11 @@ class UserUpdateModel(UserBaseModel, BaseUpdateModel):
 
 
 class UserOutModel(UserBaseModel, BaseOutModel):
-    pass
+    last_login: datetime | None
+    login_attempts: int = 0
 
 
 class User(UserOutModel, table=True):
     password_hash: str
-    last_login: datetime | None
-    login_attempts: int = 0
     # external_auth_id: str | None = None
     # external_auth_data: dict | None = None

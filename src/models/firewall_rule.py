@@ -1,12 +1,12 @@
 from sqlalchemy import Column
-from sqlmodel import SQLModel, Field, Enum as SQLModelEnum
+from sqlmodel import Field, Enum as SQLModelEnum
 
 from src.common.notification import NotifiableObject
-from src.models.base import BaseUpdateModel, BaseOutModel
+from src.models.base import BaseUpdateModel, BaseOutModel, BaseSQLModel
 from src.models.enums import Action
 
 
-class FirewallRuleBaseModel(SQLModel, table=False):
+class FirewallRuleBaseModel(BaseSQLModel, table=False):
     protocol: str | None = None
     src_address: str | None = None
     des_address: str | None = None
