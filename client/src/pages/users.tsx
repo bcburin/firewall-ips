@@ -46,7 +46,7 @@ const UsersPage: React.FC = () => {
     { field: 'firstName', headerName: 'First Name', width: 150 },
     { field: 'lastName', headerName: 'Last Name', width: 150 },
     { field: 'lastLogin', headerName: 'Last Login', width: 200, type: "dateTime", valueGetter: (value) => value && new Date(value) },
-    { field: 'loginAttempts', headerName: 'Login Attempts', width: 120 },
+    { field: 'loginAttempts', headerName: 'Login Attempts', width: 120, type: "number" },
     { field: 'updatedAt', headerName: 'Last Update', width: 200, type: "dateTime", valueGetter: (value) => value && new Date(value) },
     { field: 'createdAt', headerName: 'Creation Time', width: 200, type: "dateTime", valueGetter: (value) => value && new Date(value) },
     { field: 'active', headerName: 'Is active?', width: 100, type: "boolean" },
@@ -103,6 +103,14 @@ const UsersPage: React.FC = () => {
                   <DataGrid
                     rows={users}
                     columns={columns}
+                    initialState={{
+                      columns: {
+                        columnVisibilityModel: {
+                          createdAt: false,
+                          updatedAt: false,
+                        }
+                      }
+                    }}
                     slots={{ toolbar: ActionsToolbar }}
                     slotProps={{
                       toolbar: {
@@ -113,7 +121,7 @@ const UsersPage: React.FC = () => {
                       },
                     }}
                     checkboxSelection
-                    disableRowSelectionOnClick
+                  // disableRowSelectionOnClick
                   // onRowSelectionModelChange={(ids) => setSelectedRows(ids)}
                   />
                 </Stack>
