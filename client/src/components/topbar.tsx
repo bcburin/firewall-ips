@@ -48,7 +48,7 @@ const TopBar = ({ open, onOpen }: TopBarProps) => {
                     <MenuIcon />
                 </IconButton>
                 <Typography variant="h6" noWrap component="div">
-                    Persistent drawer
+                    IPS FW
                 </Typography>
             </Toolbar>
         </AppBar>
