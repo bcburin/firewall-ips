@@ -1,15 +1,21 @@
+import { ReactNode, useState } from 'react'
+
 import Box from '@mui/material/Box';
-import PropTypes from "prop-types";
 import SideNav from '../components/sidenav';
 import TopBar from '../components/topbar';
-import { useState } from 'react'
+import { useAuthGuard } from '../hooks/auth';
 import { useTheme } from '@mui/material';
 
 const drawerWidth = 240;
 
-const DashboardLayout = ({ children }: any) => {
+interface MainLayoutProps {
+    children: ReactNode;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children }: any) => {
     const theme = useTheme();
     const [sideNavIsOpen, setSideNavIdOpen] = useState(true);
+    useAuthGuard(false);
 
     const handleDrawerOpen = () => {
         setSideNavIdOpen(true);
@@ -20,6 +26,7 @@ const DashboardLayout = ({ children }: any) => {
     };
 
     return (
+        // <AuthGuard>
         <Box sx={{ display: 'flex' }}>
             <TopBar open={sideNavIsOpen} onOpen={handleDrawerOpen} />
             <SideNav open={sideNavIsOpen} onClose={handleDrawerClose} />
@@ -28,7 +35,7 @@ const DashboardLayout = ({ children }: any) => {
                 sx={{
                     flexGrow: 1,
                     p: 3,
-                    mt: '64px', // Adjust this value to the height of your TopBar
+                    mt: '64px',
                     ml: sideNavIsOpen ? 0 : `${-drawerWidth}px`,
                     transition: theme.transitions.create(['margin'], {
                         easing: theme.transitions.easing.sharp,
@@ -39,13 +46,10 @@ const DashboardLayout = ({ children }: any) => {
                 {children}
             </Box>
         </Box>
+        // </AuthGuard>
     );
 
 
 };
 
-DashboardLayout.prototypes = {
-    children: PropTypes.node,
-};
-
-export default DashboardLayout;
+export default MainLayout;

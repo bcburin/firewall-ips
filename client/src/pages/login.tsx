@@ -7,12 +7,18 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import { useAppDispatch, useAppSelector } from '../hooks/redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { AuthLayout } from "../layout/auth"
-import React from 'react';
+import { login } from '../store/authSlice';
 import { useFormik } from 'formik';
 
 const LoginPage: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const error = useAppSelector((state) => state.auth.error);
 
   const formik = useFormik({
     initialValues: {
@@ -28,14 +34,23 @@ const LoginPage: React.FC = () => {
       password: Yup.string().max(255).required("Password is required"),
     }),
     onSubmit: async (values, helpers) => {
-      // Implement submit logic
-      console.log(values);
+      try {
+        const { email, password } = values;
+        await dispatch(login({ username: email, password: password })).unwrap();
+        if (location.state?.from) {
+          navigate(location.state.from.pathname, { replace: true });
+        } else {
+          navigate('/dashboard');
+        }
+      } catch (err) {
+        helpers.setStatus(err);
+      }
     },
   });
 
   return (
     <AuthLayout>
-        <Box
+      <Box
         sx={{
           backgroundColor: "background.paper",
           flex: "1 1 auto",
@@ -52,59 +67,64 @@ const LoginPage: React.FC = () => {
             width: "100%",
           }}
         >
-            <Stack spacing={1} sx={{ mb: 3 }}>
-                <Typography variant="h4">Login</Typography>
+          <Stack spacing={1} sx={{ mb: 3 }}>
+            <Typography variant="h4">Login</Typography>
+          </Stack>
+
+          <form noValidate onSubmit={formik.handleSubmit} style={{
+            width: "100%"
+          }}>
+            <Stack spacing={3}>
+              <TextField
+                error={!!(formik.touched.email && formik.errors.email)}
+                fullWidth
+                helperText={formik.touched.email && formik.errors.email}
+                label="Email Address*"
+                name="email"
+                onBlur={formik.handleBlur}
+                onChange={formik.handleChange}
+                type="email"
+                value={formik.values.email}
+              />
+              <TextField
+                error={
+                  !!(formik.touched.password && formik.errors.password)
+                }
+                fullWidth
+                helperText={
+                  formik.touched.password && formik.errors.password
+                }
+                label="Password*"
+                name="password"
+                onBlur={formik.handleBlur}
+                onChange={formik.handleChange}
+                type="password"
+                value={formik.values.password}
+              />
             </Stack>
-            
-                <form noValidate onSubmit={formik.handleSubmit} style={{
-                    width: "100%"
-                }}>
-                <Stack spacing={3}>
-                        <TextField
-                    error={!!(formik.touched.email && formik.errors.email)}
-                    fullWidth
-                    helperText={formik.touched.email && formik.errors.email}
-                    label="Email Address*"
-                    name="email"
-                    onBlur={formik.handleBlur}
-                    onChange={formik.handleChange}
-                    type="email"
-                    value={formik.values.email}
-                    />
-                    <TextField
-                    error={
-                        !!(formik.touched.password && formik.errors.password)
-                    }
-                    fullWidth
-                    helperText={
-                        formik.touched.password && formik.errors.password
-                    }
-                    label="Password*"
-                    name="password"
-                    onBlur={formik.handleBlur}
-                    onChange={formik.handleChange}
-                    type="password"
-                    value={formik.values.password}
-                    />
-                </Stack>
-                {formik.errors.submit && (
-                    <Typography color="error" sx={{ mt: 3 }} variant="body2">
-                    {formik.errors.submit}
-                    </Typography>
-                )}
-                <Button
-                    fullWidth
-                    size="large"
-                    sx={{ mt: 3 }}
-                    type="submit"
-                    variant="contained"
-                >
-                    Continue
-                </Button>
-                </form>
-            
+            {formik.errors.submit && (
+              <Typography color="error" sx={{ mt: 3 }} variant="body2">
+                {formik.errors.submit}
+              </Typography>
+            )}
+            {error && (
+              <Typography color="error" sx={{ mt: 3 }} variant="body2">
+                {error}
+              </Typography>
+            )}
+            <Button
+              fullWidth
+              size="large"
+              sx={{ mt: 3 }}
+              type="submit"
+              variant="contained"
+            >
+              Continue
+            </Button>
+          </form>
+
         </Box>
-        </Box>
+      </Box>
     </AuthLayout>
   );
 };

@@ -2,9 +2,9 @@ import { Box, Container, Stack, Typography } from '@mui/material';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 
 import ActionsToolbar from '../components/actions-toolbar';
-import DashboardLayout from '../layout/dashboard';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import MainLayout from '../layout/main';
 import React from 'react';
 import { useMemo } from 'react';
 
@@ -86,7 +86,7 @@ const CriticalRulesPage: React.FC = () => {
     type CriticalRuleRow = (typeof criticalRules)[number];
 
     return (
-        <DashboardLayout>
+        <MainLayout>
             <Box
                 component="main"
                 sx={{
@@ -133,7 +133,7 @@ const CriticalRulesPage: React.FC = () => {
                     </Stack>
                 </Container>
             </Box>
-        </DashboardLayout>
+        </MainLayout>
     );
 };
 
