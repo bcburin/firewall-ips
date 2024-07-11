@@ -19,6 +19,7 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import { SvgIconComponent } from '@mui/icons-material';
 import WhatshotRoundedIcon from '@mui/icons-material/WhatshotRounded';
+import { useNavigate } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -35,12 +36,19 @@ interface SideNavItemProps {
   text: string;
   color: string;
   Icon: SvgIconComponent;
+  path: string;
 }
 
-const SideNavItem: React.FC<SideNavItemProps> = ({ text, color, Icon }) => {
+const SideNavItem: React.FC<SideNavItemProps> = ({ text, color, Icon, path }) => {
+  const navigate = useNavigate();
+
+  const handleNavigation = () => {
+    navigate(path);
+  };
+
   return (
     <ListItem disablePadding>
-      <ListItemButton>
+      <ListItemButton onClick={handleNavigation}>
         <ListItemIcon sx={{ color }}>
           <Icon />
         </ListItemIcon>
@@ -61,25 +69,30 @@ const SideNav: React.FC<SideNavProps> = ({ open, onClose }) => {
   const pageIcons = [
     {
       text: "Dashboard",
-      Icon: AssessmentRoundedIcon
+      Icon: AssessmentRoundedIcon,
+      path: "/dashboard"
     },
     {
       text: "Critical Rules",
-      Icon: GavelRoundedIcon
+      Icon: GavelRoundedIcon,
+      path: "/critical-rules"
     },
     {
       text: "Firewall Rules",
-      Icon: WhatshotRoundedIcon
+      Icon: WhatshotRoundedIcon,
+      path: "/firewall-rules"
     },
     {
       text: "Users",
-      Icon: PersonRoundedIcon
+      Icon: PersonRoundedIcon,
+      path: "/users"
     },
     {
       text: "Configurations",
-      Icon: SettingsRoundedIcon
+      Icon: SettingsRoundedIcon,
+      path: "/configurations"
     }
-  ]
+  ];
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -105,8 +118,8 @@ const SideNav: React.FC<SideNavProps> = ({ open, onClose }) => {
           </IconButton>
         </DrawerHeader>
         <List>
-          {pageIcons.map(({ text, Icon }, index) =>
-            <SideNavItem key={index} text={text} color={theme.palette.common.white} Icon={Icon} />
+          {pageIcons.map(({ text, Icon, path }, index) =>
+            <SideNavItem key={index} text={text} color={theme.palette.common.white} Icon={Icon} path={path} />
           )}
         </List>
       </Drawer>
