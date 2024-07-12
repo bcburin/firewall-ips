@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 
 from pydantic.alias_generators import to_camel
-from sqlalchemy import orm
 from sqlmodel import SQLModel, Field, Session
 
 
