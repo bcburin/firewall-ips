@@ -215,7 +215,9 @@ class ConfigurationManager(metaclass=Singleton):
 
     def get_server_config(self, redact_sensitive_data: bool = False):
         if self._server_config is None:
-            raise ConfigurationNotLoaded("cannot retrieve server configs")
+            self.load_configs()
+            if self._server_config is None:
+                raise ConfigurationNotLoaded("cannot retrieve server configs")
         if redact_sensitive_data:
             config_copy = self._server_config.model_copy(deep=True)
             config_copy.database.password = "<password>"
