@@ -33,19 +33,19 @@ def get_all(
     return session.query(User).offset(skip).limit(limit).all()
 
 
+@router.get(path='/me', response_model=UserOutModel)
+def get_user_me(current_user: InjectedCurrentUser):
+    if not current_user:
+        raise AuthException('Not Authenticated')
+    return current_user
+
+
 @router.get('/{id}', response_model=UserOutModel)
 def get_one(id: int, session: InjectedSession):
     user = session.query.get(id)
     if user is None:
         raise NotFoundDbException(ENTITY)
     return user
-
-
-@router.get(path='/me', response_model=UserOutModel)
-def get_user_me(current_user: InjectedCurrentUser):
-    if not current_user:
-        raise AuthException('Not Authenticated')
-    return current_user
 
 
 @router.post('/', response_model=UserOutModel)
@@ -63,9 +63,18 @@ def update(id: int, item: UserUpdateModel, session: InjectedSession):
     return user.update_from(update_model=item).update(session)
 
 
+@router.put('/{id}/toggle', response_model=UserOutModel)
+def toggle_active(id: int, session: InjectedSession):
+    user: User = session.query(User).get(id)
+    if user is None:
+        raise NotFoundDbException(ENTITY)
+    user.active = not user.active
+    return user.update(session)
+
+
 @router.delete('/{id}', response_model=bool)
 def delete_one(id: int, session: InjectedSession):
-    user = session.query.get(id)
+    user = session.query(User).get(id)
     if user is None:
         raise NotFoundDbException(ENTITY)
     if user.active:
