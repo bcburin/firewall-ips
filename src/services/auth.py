@@ -14,7 +14,6 @@ from src.common.exceptions.auth import AuthenticationServiceNotLoadedException
 from src.common.utils import Singleton
 from src.models.user import UserOutModel, User
 from src.services.database import InjectedSession
-from src.services.models import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
@@ -34,7 +33,7 @@ class JWTAuthService(TokenAuthService):
             username: str = payload.get('sub')
             if username is None:
                 return None
-            return UserService(self._s).get_by_username_or_email(identifier=username)
+            return User.get_by_username_or_email(self._s, identifier=username)
         except (JWTError, ValidationError):
             return None
 
@@ -50,7 +49,9 @@ class TokenAuthManager(metaclass=Singleton):
 
     def get_service(self, session: Session, config: AuthConfig.TokenConfig) -> TokenAuthService:
         if self._service is None:
-            raise AuthenticationServiceNotLoadedException()
+            self.load()
+            if self._service is None:
+                raise AuthenticationServiceNotLoadedException()
         return self._service(session, config)
 
     def generate_token(self, user: User, session: Session, config: AuthConfig.TokenConfig):

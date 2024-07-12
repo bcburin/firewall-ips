@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 from sqlmodel import Session
 
 from src.common.exceptions.db import NotFoundDbException, NoUpdatesProvidedDbException
 from src.models.critical_rule import CriticalRuleCreateModel, CriticalRuleUpdateModel, \
-    CriticalRuleOutModel
-from src.services.models import CriticalRuleService
-from src.services.database import get_session
-
+    CriticalRuleOutModel, CriticalRule
+from src.services.database import InjectedSession
 
 router = APIRouter(prefix='/criticalRules', tags=['Critical Rules'])
 
@@ -17,43 +15,44 @@ ENTITY = 'critical rule'
 def get_all(
         skip: int = Query(default=0, ge=0),
         limit: int | None = Query(default=100, ge=0),
-        session: Session = Depends(get_session)):
-    return CriticalRuleService(session=session).get_all(skip=skip, limit=limit)
+        session: Session = InjectedSession):
+    return session.query(CriticalRule).offset(skip).limit(limit)
 
 
 @router.get('/{id}', response_model=CriticalRuleOutModel)
-def get_by_id(id: int, session: Session = Depends(get_session)):
-    return CriticalRuleService(session=session).get_by_id(id_value=id)
+def get_one(id: int, session: Session = InjectedSession):
+    cr = session.query.get(id)
+    if cr is None:
+        raise NotFoundDbException(ENTITY)
+    return cr
 
 
 @router.post('/', response_model=CriticalRuleOutModel)
-def create(item: CriticalRuleCreateModel, session: Session = Depends(get_session)):
-    return CriticalRuleService(session=session).create(obj=item)
+def create(item: CriticalRuleCreateModel, session: Session = InjectedSession):
+    return CriticalRule.create_from(create_model=item).save(session)
 
 
 @router.put('/{id}', response_model=CriticalRuleOutModel)
-def update(id: int, item: CriticalRuleUpdateModel, session: Session = Depends(get_session)):
+def update(id: int, item: CriticalRuleUpdateModel, session: Session = InjectedSession):
     if not item.has_updates():
-        raise NoUpdatesProvidedDbException(origin=ENTITY)
-    service = CriticalRuleService(session=session)
-    db_item = service.get_by_id(id_value=id)
-    if not db_item:
-        raise NotFoundDbException(origin=ENTITY)
-    return service.update(db_obj=db_item, obj=item)
+        raise NoUpdatesProvidedDbException(ENTITY)
+    cr: CriticalRule = session.query(CriticalRule).get(id)
+    if cr is None:
+        raise NotFoundDbException(ENTITY)
+    return cr.update_from(update_model=item).update(session)
 
 
-@router.delete('/{id}', response_model=CriticalRuleOutModel)
-def delete(id: int, session: Session = Depends(get_session)):
-    item = CriticalRuleService(session=session).remove(pk=id)
-    if not item:
-        raise NotFoundDbException(origin=ENTITY)
-    return item
+@router.delete('/{id}', response_model=bool)
+def delete_one(id: int, session: Session = InjectedSession):
+    user = session.query.get(id)
+    if user is None:
+        raise NotFoundDbException(ENTITY)
+    user.delete(session)
+    return True
 
 
-@router.delete('/', response_model=list[CriticalRuleOutModel])
-def delete_multiple(ids: list[int], session: Session = Depends(get_session)):
-    deleted_users = []
-    for pk in ids:
-        deleted_user = CriticalRuleService(session=session).remove(pk=pk)
-        deleted_users.append(deleted_user)
-    return deleted_users
+@router.delete('/', response_model=bool)
+def delete_multiple(ids: list[int], session: Session = InjectedSession):
+    session.execute(CriticalRule.__table__.delete().where(CriticalRule.id.in_(ids)))
+    session.commit()
+    return True
