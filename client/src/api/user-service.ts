@@ -15,7 +15,11 @@ export interface UserCreate extends Omit<UserBase, 'active'> {
     active?: boolean;
 }
 
-export interface UserUpdate extends Omit<UserBase, 'active'> {
+export interface UserUpdate {
+    username?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
     password?: string;
     active?: boolean;
 }
@@ -52,6 +56,21 @@ export const userService = {
 
     create: async (data: UserCreate) => {
         const response = await httpClient.post('/users', data);
+        return response.data;
+    },
+
+    update: async (id: number, data: UserUpdate) => {
+        const response = await httpClient.put(`/users/${id}`, data);
+        return response.data;
+    },
+
+    toggleActive: async (id: number) => {
+        const response = await httpClient.put(`/users/${id}/toggle`);
+        return response.data;
+    },
+
+    delete: async (id: number) => {
+        const response = await httpClient.delete(`/users/${id}`);
         return response.data;
     },
 
