@@ -1,9 +1,7 @@
 {
   "lightgbm": [
     {
-      "numClass": 3,
-      "objective": ["multiclass"],
-      "boostingType": ["gbdt","dart","rf"],
+      "numClass": 2,
       "numLeaves": [10,30,50,100],
       "learningRate": [0.001,0.005,0.01,0.05],
       "nEstimators": [10,50,100]
@@ -11,8 +9,7 @@
   ],
   "gradientboost":[
     {
-      "numClass": 3,
-      "loss": ["log_loss", "exponential"],
+      "numClass": 2,
       "learningRate": [0.005,0.01,0.05,0.1],
       "nEstimators": [10,30,50,100],
       "subsample": [0.1,0.3,0.5,0.7,0.9],
@@ -21,34 +18,30 @@
   ],
   "logisticregression":[
     {
-      "numClass": 3,
+      "numClass": 2,
       "penalty": ["l2"]
     }
   ],
   "multilayerperceptron":[
     {
-      "numClass": 3,
-      "solver": ["lbfgs", "sgd", "adam"],
+      "numClass": 2,
       "hiddenLayer": [100],
-      "activation": ["identity", "logistic", "tanh", "relu"],
-      "learningRate": ["constant", "invscaling", "adaptive"],
-      "learningRateInit": [0.001,0.005,0.01,0.05],
       "momentum": [0.1,0.3,0.5,0.7,0.9],
       "earlyStopping": [0]
     }
   ],
   "randomforest":[
     {
-      "numClass": 3,
+      "numClass": 2,
       "n_estimators": [10,30,50,100],
       "criterion": ["gini", "entropy", "log_loss"]
     }
   ],
   "svm":[
     {
-      "numClass": 3,
+      "numClass": 2,
       "kernel": ["rbf","linear","sigmoid"],
-      "degree": [3]
+      "degree": [2]
     }
   ]
 } 
