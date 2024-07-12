@@ -16,7 +16,7 @@ def get_all(
         skip: int = Query(default=0, ge=0),
         limit: int | None = Query(default=100, ge=0),
         session: Session = InjectedSession):
-    return session.query(CriticalRule).offset(skip).limit(limit)
+    return session.query(CriticalRule).offset(skip).limit(limit).all()
 
 
 @router.get('/{id}', response_model=CriticalRuleOutModel)
