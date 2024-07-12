@@ -16,7 +16,7 @@ def main():
     # load authentication service
     TokenAuthManager().load()
     # run server
-    uvicorn.run("src.main:api", host=config.host, port=config.port, reload=False)
+    uvicorn.run("src.main:api", host=config.host, port=config.port, reload=config.dev_mode)
 
 
 if __name__ == '__main__':
