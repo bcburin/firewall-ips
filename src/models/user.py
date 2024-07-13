@@ -6,11 +6,12 @@ import bcrypt
 from sqlmodel import Session, SQLModel
 
 from src.common.config import ConfigurationManager
-from src.common.exceptions.auth import LoginTriesLimitExceeded, IncorrectCredentialsException
-from src.models.base import BaseUpdateModel, BaseOutModel, BaseSQLModel
+from src.common.exceptions.auth import LoginTriesLimitExceeded, IncorrectCredentialsException, UserInactiveException, \
+    InvalidPasswordException
+from src.models.base import BaseUpdateModel, BaseOutModel, BaseSQLModel, BaseModel
 
 
-class UserBaseModel(BaseSQLModel):
+class UserBaseModel(BaseModel):
     username: str
     email: str
     first_name: str
@@ -23,12 +24,13 @@ class UserCreateModel(UserBaseModel):
     active: bool = True
 
 
-class UserUpdateModel(SQLModel, BaseUpdateModel):
+class UserUpdateModel(BaseUpdateModel):
     username: str | None = None
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    password: str | None = None
+    new_password: str | None = None
+    old_password: str | None = None
     active: bool | None = None
 
 
@@ -42,7 +44,7 @@ class GetAllUsers(SQLModel):
     total: int
 
 
-class User(UserOutModel, table=True):
+class User(UserOutModel, BaseSQLModel, table=True):
     password_hash: str
 
     # noinspection PyTypeChecker
@@ -54,9 +56,12 @@ class User(UserOutModel, table=True):
 
     # noinspection PyTypeChecker
     def update_from(self, update_model: UserUpdateModel) -> User:
-        password = update_model.password
-        if password is not None:
-            self.password_hash = self.hash_password(password)
+        if (update_model.new_password is not None
+                and update_model.should_update_str_field('password', update_model.new_password)):
+            if update_model.old_password is None or not self.check_password(update_model.old_password):
+                raise InvalidPasswordException()
+            new_password_hash = User.hash_password(password=update_model.new_password)
+            self.update_field('password_hash', new_password_hash)
         return super().update_from(update_model)
 
     @staticmethod
@@ -65,9 +70,8 @@ class User(UserOutModel, table=True):
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
         return hashed_password.decode('utf-8')
 
-    @staticmethod
-    def check_password(password: str, hashed_password: str) -> bool:
-        return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+    def check_password(self, password: str) -> bool:
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
     # noinspection PyTypeChecker
     @staticmethod
@@ -80,17 +84,22 @@ class User(UserOutModel, table=True):
     @classmethod
     def authenticate(cls, session: Session, identifier: str, password: str) -> User:
         user = cls.get_by_username_or_email(session, identifier)
-        if user is not None and not cls.check_password(password=password, hashed_password=user.password_hash):
+        if user is None:
+            raise IncorrectCredentialsException()
+        if user.active and not user.check_password(password):
             user.login_attempts += 1
-            max_tries = ConfigurationManager().get_server_config().authentication.login.max_login_tries
-            if user.login_attempts > max_tries:
+            login_configs = ConfigurationManager().get_server_config().authentication.login
+            if user.login_attempts > login_configs.max_login_tries:
                 user.active = False
                 user.update(session)
+                if login_configs.notify_on_max_tries:
+                    # TODO: implement notification on max tries
+                    pass
                 raise LoginTriesLimitExceeded()
             user.update(session)
             raise IncorrectCredentialsException()
-        if user is None:
-            raise IncorrectCredentialsException()
+        if not user.active:
+            raise UserInactiveException(user.username)
         user.login_attempts = 0
         user.last_login = datetime.now()
         user.update(session)

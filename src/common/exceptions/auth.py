@@ -6,7 +6,6 @@ from src.common.exceptions.httpexc_provider import IHTTPExceptionProvider
 
 
 class AuthException(IHTTPExceptionProvider):
-
     def __init__(self, message: str):
         self.message = message
 
@@ -14,8 +13,12 @@ class AuthException(IHTTPExceptionProvider):
         return HTTPException(status_code=HTTP_403_FORBIDDEN, detail=self.message)
 
 
-class AuthenticationServiceNotLoadedException(IHTTPExceptionProvider):
+class UserInactiveException(AuthException):
+    def __init__(self, username: str):
+        super().__init__(message=f"User {username} is inactive")
 
+
+class AuthenticationServiceNotLoadedException(IHTTPExceptionProvider):
     def __init__(self, message: str | None = None):
         self.message = f"Authentication service not loaded{ f': {message}' if message is not None else ''}"
 
@@ -26,6 +29,12 @@ class AuthenticationServiceNotLoadedException(IHTTPExceptionProvider):
 class IncorrectCredentialsException(IHTTPExceptionProvider):
     def get_http_exception(self) -> HTTPException:
         message = 'Incorrect email or password.'
+        return HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail=message)
+
+
+class InvalidPasswordException(IHTTPExceptionProvider):
+    def get_http_exception(self) -> HTTPException:
+        message = 'Incorrect password.'
         return HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail=message)
 
 

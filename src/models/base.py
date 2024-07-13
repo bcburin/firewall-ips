@@ -6,7 +6,13 @@ from pydantic.alias_generators import to_camel
 from sqlmodel import SQLModel, Field, Session
 
 
-class BaseSQLModel(SQLModel):
+class BaseModel(SQLModel):
+    class Config:
+        alias_generator = to_camel
+        populate_by_name = True
+
+
+class BaseSQLModel(BaseModel):
 
     def save(self, session: Session, commit: bool = True) -> BaseSQLModel:
         session.add(self)
@@ -37,9 +43,9 @@ class BaseSQLModel(SQLModel):
                 setattr(obj, field, val)
         return obj
 
-    def update_from(self, update_model: SQLModel) -> BaseSQLModel:
+    def update_from(self, update_model: BaseUpdateModel) -> BaseSQLModel:
         for field, new_val in update_model.__dict__.items():
-            if new_val is None:
+            if not update_model.should_update_field(field, new_val):
                 continue
             if hasattr(self, field):
                 old_val = getattr(self, field)
@@ -53,13 +59,30 @@ class BaseSQLModel(SQLModel):
         populate_by_name = True
 
 
-class BaseOutModel(SQLModel):
+class BaseOutModel(BaseModel):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
 
 
-class BaseUpdateModel:
+allow_empty_str_fields = {'description'}
+
+
+class BaseUpdateModel(BaseModel):
+
+    @classmethod
+    def should_update_str_field(cls, field: str, new_val: str):
+        if new_val == '' and field not in allow_empty_str_fields:
+            return False
+        return True
+
+    @classmethod
+    def should_update_field(cls, field: str, new_val: any) -> bool:
+        if new_val is None:
+            return False
+        if isinstance(new_val, str) and not cls.should_update_str_field(field, new_val):
+            return False
+        return True
 
     def has_updates(self):
-        return any(value is not None for value in self.__dict__.values() if value is not None)
+        return any(value for field, value in self.__dict__.items() if self.should_update_field(field, value))
