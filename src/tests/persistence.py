@@ -1,6 +1,6 @@
 import pickle
 
-from src.common.config import PersistenceConfig, ServerConfig
+from src.common.config import PersistenceConfig, ConfigurationManager
 from src.services.persistence import PersistableObjectLifeCycleManager
 from src.common.persistence import PersistableObject
 
@@ -27,7 +27,7 @@ class TestClassLCManager(PersistableObjectLifeCycleManager[TestClass]):
 
 
 if __name__ == '__main__':
-    tcm = TestClassLCManager(persistence_config=ServerConfig.get().ai_module.persistence)
+    tcm = TestClassLCManager(persistence_config=ConfigurationManager().get_server_config().ai_module.persistence)
 
     # test create, load and persist object
     tc = TestClass(n=3)

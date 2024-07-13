@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import Enum
-from functools import cached_property, cache
+from functools import cached_property
 from pathlib import Path
 from typing import TypeVar, Type, Annotated
 
@@ -42,8 +42,7 @@ class BaseConfig(BaseModel):
     __config__filename__ = None
 
     @classmethod
-    @cache
-    def get(cls: Type[T]) -> T:
+    def read_file(cls: Type[T]) -> T:
         with open(get_config_dir() / cls.__config__filename__) as f:
             data = convert_dict_keys_camel_to_snake(json.load(f))
         return TypeAdapter(cls).validate_python(data)
@@ -209,11 +208,13 @@ class ConfigurationManager(metaclass=Singleton):
 
     def __init__(self):
         self._server_config: ServerConfig | None = None
+        self._ai_models_config: AIModelsTrainingConfig | None = None
 
     def load_configs(self):
         self._server_config = ServerConfig.read_file()
+        self._ai_models_config = AIModelsTrainingConfig.read_file()
 
-    def get_server_config(self, redact_sensitive_data: bool = False):
+    def get_server_config(self, redact_sensitive_data: bool = False) -> ServerConfig:
         if self._server_config is None:
             self.load_configs()
             if self._server_config is None:
@@ -227,6 +228,13 @@ class ConfigurationManager(metaclass=Singleton):
             config_copy.authentication.token.key = "<key>"
             return config_copy
         return self._server_config
+
+    def get_ai_models_training_config(self) -> AIModelsTrainingConfig:
+        if self._ai_models_config is None:
+            self.load_configs()
+            if self._server_config is None:
+                raise ConfigurationNotLoaded("cannot retrieve AI model training configs")
+        return self._ai_models_config
 
 
 configuration_manager = ConfigurationManager()
