@@ -1,6 +1,7 @@
 import { Box, Container, Stack, Typography } from '@mui/material';
 import { DataGrid, GridActionsCellItem, GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
-import React, { useCallback, useEffect, useState } from 'react';
+import { PaginatedResponse, usePaginatedData } from '../hooks/paginated-data';
+import React, { useCallback, useMemo, useState } from 'react';
 import { User, userService } from '../api/user-service';
 
 import ActionsToolbar from '../components/actions-toolbar';
@@ -11,66 +12,39 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import ToggleOffRoundedIcon from '@mui/icons-material/ToggleOffRounded';
 import ToggleOnRoundedIcon from '@mui/icons-material/ToggleOnRounded';
 import UpdateUserModal from '../components/modals/user/user-update';
-import { useMemo } from 'react';
+import { useModalState } from '../hooks/modals';
+import { useUpdateModalState } from '../hooks/modals';
+
+const fetchUsers = async (page: number, pageSize: number): Promise<PaginatedResponse<User>> => {
+  return await userService.getAll(page, pageSize);
+};
 
 const UsersPage: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([])
-  const [createModalIsOpen, setCreateModalIsOpen] = useState(false);
-  const [updateModalState, setUpdateModalState] = useState<{ isOpen: boolean, user: User | null }>({
-    isOpen: false,
-    user: null
-  });
-  const [deleteModalState, setDeleteModalState] = useState<{ isOpen: boolean, user: User | null }>({
-    isOpen: false,
-    user: null,
-  });
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [paginationModel, setPaginationModel] = React.useState({
-    page: 0,
-    pageSize: 2,
-  });
-  const rowCountRef = React.useRef(users.length || 0);
+  const { data: users, total: totalUsers, paginationModel, setPaginationModel, getData: getUsers, loading } = usePaginatedData<User>(fetchUsers);
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([]);
 
-  const rowCount = React.useMemo(() => {
-    if (totalUsers !== undefined) {
-      rowCountRef.current = totalUsers;
-    }
-    return rowCountRef.current;
-  }, [totalUsers]);
+  const createModal = useModalState();
+  const updateModal = useUpdateModalState<User | null>();
+  const deleteModal = useUpdateModalState<User | null>();
 
-  const getUsersHandler = useCallback(async () => {
+  const deleteUserHandler = async (userId: number) => {
     try {
-      const getAllResponse = await userService.getAll(paginationModel.page, paginationModel.pageSize);
-      setUsers(getAllResponse.data);
-      setTotalUsers(getAllResponse.total)
-    } catch (e) {
-      console.log(e);
-    }
-  }, [paginationModel]);
-
-  const deleteUserHandler = (userId: number) => async () => {
-    try {
-      setDeleteModalState({ isOpen: false, user: null });
+      deleteModal.close();
       await userService.delete(userId);
-      await getUsersHandler();
+      await getUsers();
     } catch (e) {
       console.log(e);
     }
   }
 
-  const toggleUserHandler = useCallback((userId: number) => async () => {
+  const toggleUserHandler = useCallback(async (userId: number) => {
     try {
       await userService.toggleActive(userId);
-      await getUsersHandler();
+      await getUsers();
     } catch (e) {
       console.log(e);
     }
-  }, [getUsersHandler])
-
-  useEffect(() => {
-    getUsersHandler();
-  }, [getUsersHandler]);
+  }, [getUsers])
 
   const columns = useMemo<GridColDef<UserRow>[]>(() => [
     { field: 'id', headerName: 'Id', width: 50 },
@@ -90,8 +64,8 @@ const UsersPage: React.FC = () => {
       getActions: (params) => [
         <GridActionsCellItem
           icon={(params.row.active) ? <ToggleOnRoundedIcon /> : <ToggleOffRoundedIcon />}
-          label="Edit"
-          onClick={toggleUserHandler(params.row.id)}
+          label="Toggle"
+          onClick={() => toggleUserHandler(params.row.id)}
         />,
       ],
     },
@@ -103,18 +77,16 @@ const UsersPage: React.FC = () => {
         <GridActionsCellItem
           icon={<DeleteRoundedIcon />}
           label="Delete"
-          onClick={() => setDeleteModalState({ isOpen: true, user: params.row })}
+          onClick={() => deleteModal.open(params.row)}
         />,
         <GridActionsCellItem
           icon={<EditRoundedIcon />}
           label="Edit"
-          onClick={() => setUpdateModalState({ isOpen: true, user: params.row })}
+          onClick={() => updateModal.open(params.row)}
         />,
       ],
     },
-  ],
-    [toggleUserHandler]
-  )
+  ], [toggleUserHandler, deleteModal, updateModal]);
 
   type UserRow = (typeof users)[number];
 
@@ -147,19 +119,20 @@ const UsersPage: React.FC = () => {
                     slots={{ toolbar: ActionsToolbar }}
                     slotProps={{
                       toolbar: {
-                        onCreateClick: () => setCreateModalIsOpen(true),
-                        onRefreshClick: () => getUsersHandler(),
+                        onCreateClick: createModal.open,
+                        onRefreshClick: getUsers,
                         deleteIsDisabled: selectedRows.length === 0,
                       },
                     }}
                     checkboxSelection
                     onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
                     rowSelectionModel={selectedRows}
-                    rowCount={rowCount}
-                    pageSizeOptions={[2, 4, 8]}
+                    rowCount={totalUsers}
+                    pageSizeOptions={[50, 100, 150]}
                     paginationMode='server'
                     paginationModel={paginationModel}
                     onPaginationModelChange={setPaginationModel}
+                    loading={loading}
                   />
                 </Stack>
               </Stack>
@@ -169,30 +142,30 @@ const UsersPage: React.FC = () => {
       </Box>
 
       <CreateUserModal
-        open={createModalIsOpen}
-        onClose={() => setCreateModalIsOpen(false)}
+        open={createModal.isOpen}
+        onClose={createModal.close}
         onConfirm={async () => {
-          setCreateModalIsOpen(false);
-          await getUsersHandler();
+          createModal.close();
+          await getUsers();
         }}
       />
 
       <UpdateUserModal
-        open={updateModalState.isOpen}
-        onClose={() => setUpdateModalState({ isOpen: false, user: null })}
+        open={updateModal.state.isOpen}
+        onClose={updateModal.close}
         onConfirm={async () => {
-          setUpdateModalState({ isOpen: false, user: null })
-          await getUsersHandler();
+          updateModal.close();
+          await getUsers();
         }}
-        user={updateModalState.user as User}
+        user={updateModal.state.data as User}
       />
 
       <ConfirmationModal
-        open={deleteModalState.isOpen}
-        onClose={() => setDeleteModalState({ isOpen: false, user: null })}
-        onConfirm={deleteUserHandler(deleteModalState.user?.id as number)}
+        open={deleteModal.state.isOpen}
+        onClose={deleteModal.close}
+        onConfirm={() => deleteUserHandler(deleteModal.state.data?.id as number)}
         title="Delete User"
-        content={`Are you sure you want to delete user ${deleteModalState.user?.username}?`}
+        content={`Are you sure you want to delete user ${deleteModal.state.data?.username}?`}
       />
     </>
   );
