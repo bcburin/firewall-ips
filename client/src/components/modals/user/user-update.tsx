@@ -14,31 +14,30 @@ interface UpdateUserModalProps {
 
 const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ open, onClose, onConfirm, user }) => {
     const initialValues = {
+        username: user?.username || "",
         email: user?.email || "",
         firstName: user?.firstName || "",
         lastName: user?.lastName || "",
-        password: "",
         submit: null,
     };
 
     const validationSchema = Yup.object({
+        username: Yup.string().max(255),
         email: Yup.string().email("Must be a valid email").max(255),
         firstName: Yup.string().max(255),
         lastName: Yup.string().max(255),
-        password: Yup.string().max(255),
     });
 
     const fields = [
+        { name: 'username', label: 'Username' },
         { name: 'firstName', label: 'First Name' },
         { name: 'lastName', label: 'Last Name' },
         { name: 'email', label: 'Email Address', type: 'email' },
-        { name: 'password', label: 'Password', type: 'password' },
     ];
 
     const handleSubmit = async (values: Record<string, any>) => {
         if (user) {
             const userUpdate: UserUpdate = {
-                password: values.password,
                 email: values.email,
                 username: values.username,
                 firstName: values.firstName,
