@@ -13,16 +13,28 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 
 const StyledButton = styled(Button)(({ theme }) => ({
     marginRight: theme.spacing(1),
+    '& .MuiButton-startIcon': {
+        marginRight: 0,
+    },
+    '&:hover .MuiButton-startIcon': {
+        marginRight: theme.spacing(1),
+    },
+    '&:hover .button-text': {
+        display: 'inline',
+    },
+    '& .button-text': {
+        display: 'none',
+    },
 }));
 
 interface ActionsToolbarProps {
-    onCreateClick?: () => void,
-    onRefreshClick?: () => void,
-    onDeleteClick?: () => void,
-    deleteIsDisabled: boolean
+    onCreateClick?: () => void;
+    onRefreshClick?: () => void;
+    onDeleteClick?: () => void;
+    deleteIsDisabled: boolean;
 }
 
-const ActionsToolbar: any = ({  // TODO: fix actions toolbar type
+const ActionsToolbar: any = ({
     onCreateClick,
     onRefreshClick,
     onDeleteClick,
@@ -46,7 +58,7 @@ const ActionsToolbar: any = ({  // TODO: fix actions toolbar type
                         variant="contained"
                         onClick={onCreateClick}
                     >
-                        Create
+                        <span className="button-text">Create</span>
                     </StyledButton>
                 )}
                 {onRefreshClick && (
@@ -59,7 +71,7 @@ const ActionsToolbar: any = ({  // TODO: fix actions toolbar type
                         variant="contained"
                         onClick={onRefreshClick}
                     >
-                        Refresh
+                        <span className="button-text">Refresh</span>
                     </StyledButton>
                 )}
                 {onDeleteClick && (
@@ -73,7 +85,7 @@ const ActionsToolbar: any = ({  // TODO: fix actions toolbar type
                         onClick={onDeleteClick}
                         disabled={deleteIsDisabled}
                     >
-                        Delete
+                        <span className="button-text">Delete</span>
                     </StyledButton>
                 )}
             </Box>
