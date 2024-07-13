@@ -8,15 +8,15 @@ import NotFoundPage from './pages/not-found';
 import React from 'react';
 import UsersPage from './pages/users';
 
-const App: React.FC = () => {
-  const withMainLayout = (page: JSX.Element) => {
-    return (
-      <MainLayout>
-        {page}
-      </MainLayout>
-    );
-  }
+const withMainLayout = (page: JSX.Element) => {
+  return (
+    <MainLayout>
+      {page}
+    </MainLayout>
+  );
+}
 
+const App: React.FC = () => {
   return (
     <Router>
       <Routes>
