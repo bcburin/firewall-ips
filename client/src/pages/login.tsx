@@ -43,7 +43,9 @@ const LoginPage: React.FC = () => {
           navigate('/dashboard');
         }
       } catch (err) {
-        helpers.setStatus(err);
+        helpers.setStatus({ success: false });
+        helpers.setErrors({ submit: (err as Error).message });
+        helpers.setSubmitting(false);
       }
     },
   });
