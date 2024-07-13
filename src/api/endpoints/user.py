@@ -70,6 +70,8 @@ def toggle_active(id: int, session: InjectedSession):
     user: User = session.query(User).get(id)
     if user is None:
         raise NotFoundDbException(ENTITY)
+    if not user.active:
+        user.login_attempts = 0
     user.active = not user.active
     return user.update(session)
 
