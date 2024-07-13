@@ -1,6 +1,6 @@
 import { Box, Container, Stack, Typography } from '@mui/material';
 import { DataGrid, GridActionsCellItem, GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { User, userService } from '../api/user-service';
 
 import ActionsToolbar from '../components/actions-toolbar';
@@ -8,7 +8,6 @@ import ConfirmationModal from '../components/modals/confirmation-modal';
 import CreateUserModal from '../components/modals/user/user-create';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import MainLayout from '../layout/main';
 import ToggleOffRoundedIcon from '@mui/icons-material/ToggleOffRounded';
 import ToggleOnRoundedIcon from '@mui/icons-material/ToggleOnRounded';
 import UpdateUserModal from '../components/modals/user/user-update';
@@ -46,14 +45,14 @@ const UsersPage: React.FC = () => {
     }
   }
 
-  const toggleUserHandler = (userId: number) => async () => {
+  const toggleUserHandler = useCallback((userId: number) => async () => {
     try {
       await userService.toggleActive(userId);
       await getUsersHandler();
     } catch (e) {
       console.log(e);
     }
-  }
+  }, [])
 
   useEffect(() => {
     getUsersHandler();
@@ -100,57 +99,55 @@ const UsersPage: React.FC = () => {
       ],
     },
   ],
-    []
+    [toggleUserHandler]
   )
 
   type UserRow = (typeof users)[number];
 
   return (
     <>
-      <MainLayout>
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            py: 8,
-          }}
-        >
-          <Container maxWidth="xl">
-            <Stack spacing={3}>
-              <Stack direction="row" justifyContent="space-between" spacing={4}>
-                <Stack spacing={1}>
-                  <Typography variant="h4">Users</Typography>
-                  <Stack alignItems="center" direction="row" spacing={1}>
-                    <DataGrid
-                      rows={users}
-                      columns={columns}
-                      initialState={{
-                        columns: {
-                          columnVisibilityModel: {
-                            createdAt: false,
-                            updatedAt: false,
-                          }
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          py: 8,
+        }}
+      >
+        <Container maxWidth="xl">
+          <Stack spacing={3}>
+            <Stack direction="row" justifyContent="space-between" spacing={4}>
+              <Stack spacing={1}>
+                <Typography variant="h4">Users</Typography>
+                <Stack alignItems="center" direction="row" spacing={1}>
+                  <DataGrid
+                    rows={users}
+                    columns={columns}
+                    initialState={{
+                      columns: {
+                        columnVisibilityModel: {
+                          createdAt: false,
+                          updatedAt: false,
                         }
-                      }}
-                      slots={{ toolbar: ActionsToolbar }}
-                      slotProps={{
-                        toolbar: {
-                          onCreateClick: () => setCreateModalIsOpen(true),
-                          onRefreshClick: () => getUsersHandler(),
-                          deleteIsDisabled: selectedRows.length === 0,
-                        },
-                      }}
-                      checkboxSelection
-                      onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
-                      rowSelectionModel={selectedRows}
-                    />
-                  </Stack>
+                      }
+                    }}
+                    slots={{ toolbar: ActionsToolbar }}
+                    slotProps={{
+                      toolbar: {
+                        onCreateClick: () => setCreateModalIsOpen(true),
+                        onRefreshClick: () => getUsersHandler(),
+                        deleteIsDisabled: selectedRows.length === 0,
+                      },
+                    }}
+                    checkboxSelection
+                    onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
+                    rowSelectionModel={selectedRows}
+                  />
                 </Stack>
               </Stack>
             </Stack>
-          </Container>
-        </Box>
-      </MainLayout>
+          </Stack>
+        </Container>
+      </Box>
 
       <CreateUserModal
         open={createModalIsOpen}

@@ -4,7 +4,6 @@ import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import ActionsToolbar from '../components/actions-toolbar';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import MainLayout from '../layout/main';
 import React from 'react';
 import { useMemo } from 'react';
 
@@ -86,54 +85,52 @@ const CriticalRulesPage: React.FC = () => {
     type CriticalRuleRow = (typeof criticalRules)[number];
 
     return (
-        <MainLayout>
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    py: 8,
-                }}
-            >
-                <Container maxWidth="xl">
-                    <Stack spacing={3}>
-                        <Stack direction="row" justifyContent="space-between" spacing={4}>
-                            <Stack spacing={1}>
-                                <Typography variant="h4">Critical Rules</Typography>
-                                <Stack alignItems="center" direction="row" spacing={1}>
-                                    <DataGrid
-                                        rows={criticalRules}
-                                        columns={columns}
-                                        initialState={{
-                                            columns: {
-                                                columnVisibilityModel: {
-                                                    natSrcPort: false,
-                                                    natDesPort: false,
-                                                    startTime: false,
-                                                    endTime: false,
-                                                    createdAt: false,
-                                                }
+        <Box
+            component="main"
+            sx={{
+                flexGrow: 1,
+                py: 8,
+            }}
+        >
+            <Container maxWidth="xl">
+                <Stack spacing={3}>
+                    <Stack direction="row" justifyContent="space-between" spacing={4}>
+                        <Stack spacing={1}>
+                            <Typography variant="h4">Critical Rules</Typography>
+                            <Stack alignItems="center" direction="row" spacing={1}>
+                                <DataGrid
+                                    rows={criticalRules}
+                                    columns={columns}
+                                    initialState={{
+                                        columns: {
+                                            columnVisibilityModel: {
+                                                natSrcPort: false,
+                                                natDesPort: false,
+                                                startTime: false,
+                                                endTime: false,
+                                                createdAt: false,
                                             }
-                                        }}
-                                        slots={{ toolbar: ActionsToolbar }}
-                                        slotProps={{
-                                            toolbar: {
-                                                onCreateClick: () => { },
-                                                onRefreshClick: () => { },
-                                                onDeleteClick: () => { },
-                                                deleteIsDisabled: true,
-                                            },
-                                        }}
-                                        checkboxSelection
-                                    // disableRowSelectionOnClick
-                                    // onRowSelectionModelChange={(ids) => setSelectedRows(ids)}
-                                    />
-                                </Stack>
+                                        }
+                                    }}
+                                    slots={{ toolbar: ActionsToolbar }}
+                                    slotProps={{
+                                        toolbar: {
+                                            onCreateClick: () => { },
+                                            onRefreshClick: () => { },
+                                            onDeleteClick: () => { },
+                                            deleteIsDisabled: true,
+                                        },
+                                    }}
+                                    checkboxSelection
+                                // disableRowSelectionOnClick
+                                // onRowSelectionModelChange={(ids) => setSelectedRows(ids)}
+                                />
                             </Stack>
                         </Stack>
                     </Stack>
-                </Container>
-            </Box>
-        </MainLayout>
+                </Stack>
+            </Container>
+        </Box>
     );
 };
 

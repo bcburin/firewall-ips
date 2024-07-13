@@ -1,10 +1,10 @@
-import { ReactNode, useState } from 'react'
+import { Box, CircularProgress, useTheme } from '@mui/material';
+import { ReactNode, useState, } from 'react';
 
-import Box from '@mui/material/Box';
 import SideNav from '../components/sidenav';
 import TopBar from '../components/topbar';
+import { useAppSelector } from '../hooks/redux';
 import { useAuthGuard } from '../hooks/auth';
-import { useTheme } from '@mui/material';
 
 const drawerWidth = 240;
 
@@ -12,10 +12,12 @@ interface MainLayoutProps {
     children: ReactNode;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }: any) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const theme = useTheme();
     const [sideNavIsOpen, setSideNavIdOpen] = useState(true);
     useAuthGuard(false);
+
+    const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
     const handleDrawerOpen = () => {
         setSideNavIdOpen(true);
@@ -25,8 +27,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }: any) => {
         setSideNavIdOpen(false);
     };
 
+    if (!isAuthenticated) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100vh'
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
+
     return (
-        // <AuthGuard>
         <Box sx={{ display: 'flex' }}>
             <TopBar open={sideNavIsOpen} onOpen={handleDrawerOpen} />
             <SideNav open={sideNavIsOpen} onClose={handleDrawerClose} />
@@ -46,10 +62,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }: any) => {
                 {children}
             </Box>
         </Box>
-        // </AuthGuard>
     );
-
-
 };
 
 export default MainLayout;
