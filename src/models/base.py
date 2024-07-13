@@ -53,7 +53,7 @@ class BaseSQLModel(SQLModel):
         populate_by_name = True
 
 
-class BaseOutModel(BaseSQLModel):
+class BaseOutModel(SQLModel):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)

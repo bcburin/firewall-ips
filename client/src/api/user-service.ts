@@ -29,6 +29,11 @@ export interface User extends UserBase, BaseModel {
     loginAttempts: number;
 }
 
+interface GetAllResponse {
+    data: User[],
+    total: number
+}
+
 export interface LoginData {
     username: string;
     password: string;
@@ -74,10 +79,10 @@ export const userService = {
         return response.data;
     },
 
-    getAll: async (skip = 0, limit = 100) => {
+    getAll: async (page = 0, pageSize = 100) => {
         const response = await httpClient.get('/users', {
-            params: { skip, limit },
+            params: { page, pageSize },
         });
-        return response.data;
+        return response.data as GetAllResponse;
     },
 };

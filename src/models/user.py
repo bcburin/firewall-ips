@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import bcrypt
-from sqlmodel import Session
+from sqlmodel import Session, SQLModel
 
 from src.common.config import ConfigurationManager
 from src.common.exceptions.auth import LoginTriesLimitExceeded, IncorrectCredentialsException
@@ -23,7 +23,7 @@ class UserCreateModel(UserBaseModel):
     active: bool = True
 
 
-class UserUpdateModel(BaseSQLModel, BaseUpdateModel):
+class UserUpdateModel(SQLModel, BaseUpdateModel):
     username: str | None = None
     email: str | None = None
     first_name: str | None = None
@@ -35,6 +35,11 @@ class UserUpdateModel(BaseSQLModel, BaseUpdateModel):
 class UserOutModel(UserBaseModel, BaseOutModel):
     last_login: datetime | None
     login_attempts: int = 0
+
+
+class GetAllUsers(SQLModel):
+    data: list[User]
+    total: int
 
 
 class User(UserOutModel, table=True):

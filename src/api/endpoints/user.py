@@ -7,7 +7,7 @@ from src.common.config import InjectedTokenConfig
 from src.common.exceptions.auth import AuthException
 from src.common.exceptions.db import NotFoundDbException, NoUpdatesProvidedDbException
 from src.common.exceptions.model import DeletionOfActiveUserException
-from src.models.user import UserOutModel, UserCreateModel, UserUpdateModel, User
+from src.models.user import UserOutModel, UserCreateModel, UserUpdateModel, User, GetAllUsers
 from src.services.auth import TokenAuthManager, InjectedCurrentUser
 from src.services.database import InjectedSession
 
@@ -24,13 +24,15 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
-@router.get('/', response_model=list[UserOutModel])
+@router.get('/', response_model=GetAllUsers)
 def get_all(
         session: InjectedSession,
-        skip: int = Query(default=0, ge=0),
-        limit: int | None = Query(default=100, ge=0),
+        page: int = Query(default=0, ge=0),
+        page_size: int | None = Query(default=100, ge=0, alias='pageSize'),
         ):
-    return session.query(User).offset(skip).limit(limit).all()
+    total_rows = session.query(User).count()
+    users = session.query(User).order_by(User.id).offset(page * page_size).limit(page_size).all()
+    return GetAllUsers(data=users, total=total_rows)
 
 
 @router.get(path='/me', response_model=UserOutModel)

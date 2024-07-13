@@ -25,15 +25,29 @@ const UsersPage: React.FC = () => {
     isOpen: false,
     user: null,
   });
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [paginationModel, setPaginationModel] = React.useState({
+    page: 0,
+    pageSize: 2,
+  });
+  const rowCountRef = React.useRef(users.length || 0);
 
-  const getUsersHandler = async () => {
+  const rowCount = React.useMemo(() => {
+    if (totalUsers !== undefined) {
+      rowCountRef.current = totalUsers;
+    }
+    return rowCountRef.current;
+  }, [totalUsers]);
+
+  const getUsersHandler = useCallback(async () => {
     try {
-      const fetchedUsers = await userService.getAll();
-      setUsers(fetchedUsers);
+      const getAllResponse = await userService.getAll(paginationModel.page, paginationModel.pageSize);
+      setUsers(getAllResponse.data);
+      setTotalUsers(getAllResponse.total)
     } catch (e) {
       console.log(e);
     }
-  }
+  }, [paginationModel]);
 
   const deleteUserHandler = (userId: number) => async () => {
     try {
@@ -52,11 +66,11 @@ const UsersPage: React.FC = () => {
     } catch (e) {
       console.log(e);
     }
-  }, [])
+  }, [getUsersHandler])
 
   useEffect(() => {
     getUsersHandler();
-  }, []);
+  }, [getUsersHandler]);
 
   const columns = useMemo<GridColDef<UserRow>[]>(() => [
     { field: 'id', headerName: 'Id', width: 50 },
@@ -141,6 +155,11 @@ const UsersPage: React.FC = () => {
                     checkboxSelection
                     onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
                     rowSelectionModel={selectedRows}
+                    rowCount={rowCount}
+                    pageSizeOptions={[2, 4, 8]}
+                    paginationMode='server'
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={setPaginationModel}
                   />
                 </Stack>
               </Stack>

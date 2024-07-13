@@ -11,9 +11,9 @@ api = FastAPI(
     version='1.0.0'
 )
 
+api.include_router(user.router)
 api.include_router(critical_rules.router)
 api.include_router(firewall_rules.router)
-api.include_router(user.router)
 
 
 @api.get('/')
