@@ -32,7 +32,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ open, onClose, onConf
         { name: 'username', label: 'Username' },
         { name: 'firstName', label: 'First Name' },
         { name: 'lastName', label: 'Last Name' },
-        { name: 'email', label: 'Email Address', type: 'email' },
+        { name: 'email', label: 'Email Address' },
     ];
 
     const handleSubmit = async (values: Record<string, any>) => {
@@ -52,7 +52,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ open, onClose, onConf
         <GenericFormModal
             open={open}
             onClose={onClose}
-            title="Update User"
+            title="Update"
             initialValues={initialValues}
             validationSchema={validationSchema}
             onSubmit={handleSubmit}

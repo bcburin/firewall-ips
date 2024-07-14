@@ -1,8 +1,8 @@
 import * as Yup from 'yup';
 
+import GenericFormModal, { FieldType } from '../generic-modal';
 import { UserCreate, userService } from '../../../api/user-service';
 
-import GenericFormModal from '../generic-modal';
 import React from 'react';
 
 interface CreateUserModalProps {
@@ -32,9 +32,9 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onConf
     const fields = [
         { name: 'firstName', label: 'First Name' },
         { name: 'lastName', label: 'Last Name' },
-        { name: 'email', label: 'Email Address', type: 'email' },
+        { name: 'email', label: 'Email Address' },
         { name: 'username', label: 'Username' },
-        { name: 'password', label: 'Password', type: 'password' },
+        { name: 'password', label: 'Password', type: FieldType.PASSWORD },
     ];
 
     const handleSubmit = async (values: typeof initialValues) => {
@@ -53,7 +53,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onConf
         <GenericFormModal
             open={open}
             onClose={onClose}
-            title="Create User"
+            title="Create"
             initialValues={initialValues}
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
