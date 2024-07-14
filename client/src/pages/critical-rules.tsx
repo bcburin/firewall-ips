@@ -1,50 +1,60 @@
 import { Box, Container, Stack, Typography } from '@mui/material';
-import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
+import { CriticalRule, criticalRuleService } from '../api/critical-rule-service';
+import { DataGrid, GridActionsCellItem, GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
+import { PaginatedResponse, usePaginatedData } from '../hooks/paginated-data';
+import React, { useState } from 'react';
+import { useModalState, useUpdateModalState } from '../hooks/modals';
 
 import ActionsToolbar from '../components/actions-toolbar';
+import ConfirmationModal from '../components/modals/confirmation-modal';
+import CreateCriticalRuleModal from '../components/modals/critical-rule/critical-rule-create';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import React from 'react';
+import UpdateCriticalRuleModal from '../components/modals/critical-rule/critical-rule-update';
 import { useMemo } from 'react';
 
-const CriticalRulesPage: React.FC = () => {
+const fetchCRs = async (page: number, pageSize: number): Promise<PaginatedResponse<CriticalRule>> => {
+    return await criticalRuleService.getAll(page, pageSize);
+};
 
-    const criticalRules = [
-        {
-            "createdAt": "2024-07-10T14:49:44.425132",
-            "updatedAt": "2024-07-10T14:49:44.425135",
-            "srcAddress": null,
-            "srcPort": null,
-            "natSrcPort": null,
-            "action": "allow",
-            "description": "Allow all HTTP requests",
-            "endTime": null,
-            "protocol": "tcp",
-            "id": 1,
-            "desAddress": null,
-            "desPort": 80,
-            "natDesPort": null,
-            "title": "Allow HTTP",
-            "startTime": "2024-07-10T14:48:21.828000"
-        },
-        {
-            "createdAt": "2024-07-10T14:50:34.755092",
-            "updatedAt": "2024-07-10T14:50:34.755094",
-            "srcAddress": null,
-            "srcPort": null,
-            "natSrcPort": null,
-            "action": "allow",
-            "description": "Allow all HTTPS requests",
-            "endTime": null,
-            "protocol": "tcp",
-            "id": 2,
-            "desAddress": null,
-            "desPort": 443,
-            "natDesPort": null,
-            "title": "Allow HTTPS",
-            "startTime": "2024-07-10T14:48:21.828000"
-        },
-    ]
+const CriticalRulesPage: React.FC = () => {
+    const { data: criticalRules, total: totalCRs, paginationModel, setPaginationModel, getData, loading } = usePaginatedData<CriticalRule>(fetchCRs);
+    const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([]);
+
+    const createModal = useModalState();
+    const updateModal = useUpdateModalState<CriticalRule | null>();
+    const deleteModal = useUpdateModalState<CriticalRule | null>();
+    const deleteMultipleModal = useUpdateModalState<null>();
+
+    const deleteCriticalRuleHandler = async (id: number) => {
+        try {
+            await criticalRuleService.delete(id);
+            deleteModal.close();
+        } catch (e: any) {
+            const message = e?.response?.data?.detail ?? e?.message ?? "Something went wrong";
+            deleteModal.setError(message);
+        }
+        try {
+            await getData();
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    const deleteMultipleCriticalRulesHandler = async (ids: number[]) => {
+        try {
+            await criticalRuleService.deleteMultiple(ids);
+            deleteMultipleModal.close();
+        } catch (e: any) {
+            const message = e?.response?.data?.detail ?? e?.message ?? "Something went wrong";
+            deleteMultipleModal.setError(message);
+        }
+        try {
+            await getData();
+        } catch (e) {
+            console.log(e);
+        }
+    }
 
     const columns = useMemo<GridColDef<CriticalRuleRow>[]>(() => [
         { field: 'id', headerName: 'Id', width: 50 },
@@ -69,68 +79,113 @@ const CriticalRulesPage: React.FC = () => {
                 <GridActionsCellItem
                     icon={<DeleteRoundedIcon />}
                     label="Delete"
-                    onClick={() => { }}
+                    onClick={() => deleteModal.open(params.row)}
                 />,
                 <GridActionsCellItem
                     icon={<EditRoundedIcon />}
                     label="Edit"
-                    onClick={() => { }}
+                    onClick={() => updateModal.open(params.row)}
                 />,
             ],
         },
     ],
-        []
+        [updateModal, deleteModal]
     )
 
     type CriticalRuleRow = (typeof criticalRules)[number];
 
     return (
-        <Box
-            component="main"
-            sx={{
-                flexGrow: 1,
-                py: 8,
-            }}
-        >
-            <Container maxWidth="xl">
-                <Stack spacing={3}>
-                    <Stack direction="row" justifyContent="space-between" spacing={4}>
-                        <Stack spacing={1}>
-                            <Typography variant="h4">Critical Rules</Typography>
-                            <Stack alignItems="center" direction="row" spacing={1}>
-                                <DataGrid
-                                    rows={criticalRules}
-                                    columns={columns}
-                                    initialState={{
-                                        columns: {
-                                            columnVisibilityModel: {
-                                                natSrcPort: false,
-                                                natDesPort: false,
-                                                startTime: false,
-                                                endTime: false,
-                                                createdAt: false,
+        <>
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    py: 8,
+                }}
+            >
+                <Container maxWidth="xl">
+                    <Stack spacing={3}>
+                        <Stack direction="row" justifyContent="space-between" spacing={4}>
+                            <Stack spacing={1}>
+                                <Typography variant="h4">Critical Rules</Typography>
+                                <Stack alignItems="center" direction="row" spacing={1}>
+                                    <DataGrid
+                                        rows={criticalRules}
+                                        columns={columns}
+                                        initialState={{
+                                            columns: {
+                                                columnVisibilityModel: {
+                                                    natSrcPort: false,
+                                                    natDesPort: false,
+                                                    startTime: false,
+                                                    endTime: false,
+                                                    createdAt: false,
+                                                }
                                             }
-                                        }
-                                    }}
-                                    slots={{ toolbar: ActionsToolbar }}
-                                    slotProps={{
-                                        toolbar: {
-                                            onCreateClick: () => { },
-                                            onRefreshClick: () => { },
-                                            onDeleteClick: () => { },
-                                            deleteIsDisabled: true,
-                                        },
-                                    }}
-                                    checkboxSelection
-                                // disableRowSelectionOnClick
-                                // onRowSelectionModelChange={(ids) => setSelectedRows(ids)}
-                                />
+                                        }}
+                                        slots={{ toolbar: ActionsToolbar }}
+                                        slotProps={{
+                                            toolbar: {
+                                                onCreateClick: createModal.open,
+                                                onRefreshClick: getData,
+                                                onDeleteClick: () => deleteMultipleModal.open(null),
+                                                deleteIsDisabled: selectedRows.length === 0,
+                                            },
+                                        }}
+                                        checkboxSelection
+                                        onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
+                                        rowSelectionModel={selectedRows}
+                                        rowCount={totalCRs}
+                                        pageSizeOptions={[50, 100, 150]}
+                                        paginationMode='server'
+                                        paginationModel={paginationModel}
+                                        onPaginationModelChange={setPaginationModel}
+                                        loading={loading}
+                                    />
+                                </Stack>
                             </Stack>
                         </Stack>
                     </Stack>
-                </Stack>
-            </Container>
-        </Box>
+                </Container>
+            </Box>
+
+            <CreateCriticalRuleModal
+                open={createModal.isOpen}
+                onClose={createModal.close}
+                onConfirm={async () => {
+                    createModal.close();
+                    await getData();
+                }}
+            />
+
+            <UpdateCriticalRuleModal
+                open={updateModal.state.isOpen}
+                onClose={updateModal.close}
+                onConfirm={async () => {
+                    updateModal.close();
+                    await getData();
+                }}
+                criticalRule={updateModal.state.data as CriticalRule}
+            />
+
+            <ConfirmationModal
+                open={deleteModal.state.isOpen}
+                onClose={deleteModal.close}
+                onConfirm={() => deleteCriticalRuleHandler(deleteModal.state.data?.id as number)}
+                title="Delete User"
+                content={`Are you sure you want to delete rule "${deleteModal.state.data?.title}"?`}
+                error={deleteModal.state.error}
+            />
+
+            <ConfirmationModal
+                open={deleteMultipleModal.state.isOpen}
+                onClose={deleteMultipleModal.close}
+                onConfirm={() => deleteMultipleCriticalRulesHandler(selectedRows as number[])}
+                title="Delete User"
+                content={`Are you sure you want to delete these rules"?`}
+                error={deleteModal.state.error}
+            />
+        </>
     );
 };
 

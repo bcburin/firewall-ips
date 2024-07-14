@@ -125,6 +125,7 @@ const UsersPage: React.FC = () => {
                       },
                     }}
                     checkboxSelection
+                    disableMultipleRowSelection
                     onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
                     rowSelectionModel={selectedRows}
                     rowCount={totalUsers}
