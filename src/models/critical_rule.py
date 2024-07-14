@@ -4,7 +4,7 @@ from pydantic import model_validator
 from sqlalchemy import Column
 from sqlmodel import Field, Enum as SQLModelEnum
 
-from src.models.base import BaseOutModel, BaseUpdateModel, BaseSQLModel
+from src.models.base import BaseOutModel, BaseUpdateModel, BaseSQLModel, BaseModel
 from src.models.enums import Action
 
 
@@ -12,7 +12,7 @@ MIN_PORT_NUMBER = 0
 MAX_PORT_NUMBER = 65535
 
 
-class CriticalRuleBaseModel(BaseSQLModel, table=False):
+class CriticalRuleBaseModel(BaseModel, table=False):
     protocol: str | None = None
     src_address: str | None = None
     des_address: str | None = None
@@ -48,5 +48,5 @@ class CriticalRuleUpdateModel(CriticalRuleBaseModel, BaseUpdateModel, table=Fals
     title: str | None = None
 
 
-class CriticalRule(CriticalRuleOutModel, table=True):
+class CriticalRule(CriticalRuleOutModel, BaseSQLModel, table=True):
     pass

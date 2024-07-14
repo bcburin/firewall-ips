@@ -1,23 +1,27 @@
 from fastapi import APIRouter, Query
-from sqlmodel import Session
 
 from src.common.exceptions.db import NotFoundDbException, NoUpdatesProvidedDbException
 from src.models.critical_rule import CriticalRuleCreateModel, CriticalRuleUpdateModel, \
     CriticalRuleOutModel, CriticalRule
 from src.services.database import InjectedSession
 
-router = APIRouter(prefix='/criticalRules', tags=['Critical Rules'])
+router = APIRouter(prefix='/critical-rules', tags=['Critical Rules'])
 
 ENTITY = 'critical rule'
 
 
-@router.get('/', response_model=list[CriticalRuleOutModel])
+@router.get('/')
 def get_all(
         session: InjectedSession,
-        skip: int = Query(default=0, ge=0),
-        limit: int | None = Query(default=100, ge=0),
+        page: int = Query(default=0, ge=0),
+        page_size: int | None = Query(default=100, ge=0, alias='pageSize'),
         ):
-    return session.query(CriticalRule).offset(skip).limit(limit).all()
+    total_rows = session.query(CriticalRule).count()
+    crs: list[CriticalRuleOutModel] = session.query(CriticalRule).order_by(CriticalRule.id).offset(page * page_size).limit(page_size).all()
+    return {
+        "data": crs,
+        "total": total_rows
+    }
 
 
 @router.get('/{id}', response_model=CriticalRuleOutModel)
@@ -45,7 +49,7 @@ def update(id: int, item: CriticalRuleUpdateModel, session: InjectedSession):
 
 @router.delete('/{id}', response_model=bool)
 def delete_one(id: int, session: InjectedSession):
-    user = session.query.get(id)
+    user = session.query(CriticalRule).get(id)
     if user is None:
         raise NotFoundDbException(ENTITY)
     user.delete(session)
