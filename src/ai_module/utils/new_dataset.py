@@ -4,8 +4,11 @@ import os
 import warnings
 import json
 
+from scipy import stats
+from sklearn.preprocessing import MinMaxScaler
 
-def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 30000) -> pd.DataFrame:
+
+def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 10000) -> pd.DataFrame:
     df = fix_data_type(df)
     df = drop_infinate_null(df)
     df = generate_binary_label(df)
@@ -29,6 +32,8 @@ def read_data(folder_path: str) -> pd.DataFrame:
     final_data = drop_constant_col(final_data)
     final_data = drop_duplicates(final_data)
     final_data = drop_correlated_col(final_data)
+    final_data  = filter_outliers_zscore(final_data, 7)
+    final_data = normalize(final_data)
     return final_data
 
 
@@ -101,4 +106,15 @@ def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
                     correlated_col.add(colname)
     df.drop(correlated_col, axis=1, inplace=True)
     print (f"o tamanho do dataframe é {df.shape}")
+    return df
+
+def filter_outliers_zscore(data, threshold):
+    z_scores = np.abs(stats.zscore(data))
+    outlier_mask = (z_scores > threshold).any(axis=1)
+    return data[~outlier_mask]
+
+def normalize(df):
+    columns = [col for col in df.columns if col != 'Label']
+    min_max_scaler = MinMaxScaler().fit(df[columns])
+    df[columns] = min_max_scaler.transform(df[columns])
     return df

@@ -192,6 +192,12 @@ class SVMConfig(BaseAIModelConfig):
     kernel: list[str]
     degree: list[int]
 
+class KNNConfig(BaseAIModelConfig):
+    n_neighbors: list[int]
+
+class NNConfig(BaseAIModelConfig):
+    learning_rate: list[float]
+
 
 class AIModelsTrainingConfig(BaseConfig):
     __config__filename__ = 'models.json'
@@ -202,6 +208,8 @@ class AIModelsTrainingConfig(BaseConfig):
     multilayerperceptron: list[MultiLayerPerceptronConfig]
     randomforest: list[RandomForestConfig]
     svm: list[SVMConfig]
+    knn: list[KNNConfig]
+    nn: list[NNConfig]
 
 
 class ConfigurationManager(metaclass=Singleton):

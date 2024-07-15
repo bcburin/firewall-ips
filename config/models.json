@@ -3,17 +3,17 @@
     {
       "numClass": 2,
       "numLeaves": [10,30,50,100],
-      "learningRate": [0.001,0.005,0.01,0.05],
-      "nEstimators": [10,50,100]
+      "learningRate": [0.001],
+      "nEstimators": [100]
     }
   ],
   "gradientboost":[
     {
       "numClass": 2,
-      "learningRate": [0.005,0.01,0.05,0.1],
+      "learningRate": [0.005],
       "nEstimators": [10,30,50,100],
-      "subsample": [0.1,0.3,0.5,0.7,0.9],
-      "maxDepth": [5,10,20]
+      "subsample": [0.9],
+      "maxDepth": [20]
     }
   ],
   "logisticregression":[
@@ -33,7 +33,7 @@
   "randomforest":[
     {
       "numClass": 2,
-      "n_estimators": [10,30,50,100],
+      "nEstimators": [10,30,50,100],
       "criterion": ["gini", "entropy", "log_loss"]
     }
   ],
@@ -43,5 +43,17 @@
       "kernel": ["rbf","linear","sigmoid"],
       "degree": [2]
     }
+  ],
+  "nn":[
+    {
+      "numClass" : 2,
+      "learningRate": [0.001]
+    }
+  ],
+  "knn":[
+    {
+      "numClass" : 2,
+      "nNeighbors": [5, 10, 15]  
+  }
   ]
 } 
