@@ -2,6 +2,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 import CriticalRulesPage from './pages/critical-rules';
 import DashboardPage from './pages/dashboard';
+import FirewallRulesPage from './pages/firewall-rules';
 import LoginPage from './pages/login';
 import MainLayout from './layout/main';
 import NotFoundPage from './pages/not-found';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
         <Route path="/dashboard" element={withMainLayout(<DashboardPage />)} />
         <Route path="/users" element={withMainLayout(<UsersPage />)} />
         <Route path="/critical-rules" element={withMainLayout(<CriticalRulesPage />)} />
+        <Route path="/firewall-rules" element={withMainLayout(< FirewallRulesPage />)} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>

@@ -2,11 +2,11 @@ from sqlalchemy import Column
 from sqlmodel import Field, Enum as SQLModelEnum
 
 from src.common.notification import NotifiableObject
-from src.models.base import BaseUpdateModel, BaseOutModel, BaseSQLModel
+from src.models.base import BaseUpdateModel, BaseOutModel, BaseSQLModel, BaseModel
 from src.models.enums import Action
 
 
-class FirewallRuleBaseModel(BaseSQLModel, table=False):
+class FirewallRuleBaseModel(BaseModel, table=False):
     protocol: str | None = None
     src_address: str | None = None
     des_address: str | None = None
@@ -29,5 +29,10 @@ class FirewallRuleOutModel(FirewallRuleBaseModel, BaseOutModel, NotifiableObject
     pass
 
 
-class FirewallRule(FirewallRuleOutModel, table=True):
+class GetAllFirewallRules(BaseModel):
+    data: list[FirewallRuleOutModel]
+    total: int
+
+
+class FirewallRule(FirewallRuleOutModel, BaseSQLModel, table=True):
     pass
