@@ -4,7 +4,7 @@ from typing import List, Tuple
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator
 
@@ -44,6 +44,7 @@ class AiModule():
         y_test = df['Label']
         y_pred = self.ensemble_model.predict(x_test)
         print(classification_report(y_test, y_pred))
+        print(confusion_matrix(y_test, y_pred))
     
     def change_model(self, list_models) -> None:
         self.ensemble_model = list_models

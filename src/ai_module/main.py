@@ -18,15 +18,14 @@ def create_model_tuple(df):
     pytorch_model = Firewall_NN(df.shape[1] - 1)
     nn_model = PytorchAIModel(pytorch_model)
     gbdt_model = GradientBoostingClassifier()
-    lgbm_model = LGBMClassifier()
+    lgbm_model = LGBMClassifier(objective='multiclass', num_class=7)
     lr_model = LogisticRegression()
     rf_model = RandomForestClassifier()
     SVC_model = SVC(probability=True)
     mlp_classifier = MLPClassifier()
     knn_model = KNeighborsClassifier()
     dt_model = DecisionTreeClassifier(max_depth=3, random_state=42)
-    estimators = [('lightgbm',lgbm_model), ('gradientboost', gbdt_model), ('logisticregression',lr_model),
-                   ('multilayerperceptron',mlp_classifier), ('randomforest', rf_model), ('knn', knn_model)]
+    estimators = [('lightgbm',lgbm_model)]
     return estimators
 
 if __name__ == "__main__":

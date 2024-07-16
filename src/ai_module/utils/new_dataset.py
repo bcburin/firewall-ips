@@ -8,10 +8,10 @@ from scipy import stats
 from sklearn.preprocessing import MinMaxScaler
 
 
-def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 10000) -> pd.DataFrame:
+def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 50000) -> pd.DataFrame:
     df = fix_data_type(df)
     df = drop_infinate_null(df)
-    df = generate_binary_label(df)
+    df = generate_multi_label(df)
     df = drop_unnecessary_column(df)
     df = stratified_sample(df, k, n_class)
     return df
@@ -24,7 +24,7 @@ def read_data(folder_path: str) -> pd.DataFrame:
         file_path = os.path.join(folder_path, filename)
         if os.path.isfile(file_path):
             data = pd.read_csv(file_path, low_memory=False)
-            data = prepare_data(data)
+            data = prepare_data(data, 7)
             if len(final_data) == 0:
                 final_data = data
             else:
@@ -34,6 +34,7 @@ def read_data(folder_path: str) -> pd.DataFrame:
     final_data = drop_correlated_col(final_data)
     final_data  = filter_outliers_zscore(final_data, 7)
     final_data = normalize(final_data)
+
     return final_data
 
 
@@ -60,6 +61,12 @@ def generate_binary_label(df: pd.DataFrame) -> pd.DataFrame:
     df["Label"] = df['Label'].apply(lambda x: 1 if x == 'Benign' else 0)
     return df
 
+def generate_multi_label(df: pd.DataFrame) -> pd.DataFrame:
+    with open('config/dataset.json', 'r') as file:
+        config = json.load(file)
+    mapping = config['mapping']
+    df['Label'] = df['Label'].map(mapping) 
+    return df
 
 def fix_data_type(df: pd.DataFrame) -> pd.DataFrame:
     with open('config/dataset.json', 'r') as file:
