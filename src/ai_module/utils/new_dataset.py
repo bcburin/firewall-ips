@@ -8,7 +8,7 @@ from scipy import stats
 from sklearn.preprocessing import MinMaxScaler
 
 
-def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 50000) -> pd.DataFrame:
+def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 5000) -> pd.DataFrame:
     df = fix_data_type(df)
     df = drop_infinate_null(df)
     df = generate_multi_label(df)
@@ -16,7 +16,7 @@ def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 50000) -> pd.Dat
     df = stratified_sample(df, k, n_class)
     return df
 
-def read_data(folder_path: str) -> pd.DataFrame:
+def read_data(folder_path: str, num_class: int) -> pd.DataFrame:
     warnings.filterwarnings("ignore")
     final_data: pd.DataFrame = pd.DataFrame()
     for filename in os.listdir(folder_path):
@@ -24,7 +24,7 @@ def read_data(folder_path: str) -> pd.DataFrame:
         file_path = os.path.join(folder_path, filename)
         if os.path.isfile(file_path):
             data = pd.read_csv(file_path, low_memory=False)
-            data = prepare_data(data, 7)
+            data = prepare_data(data, num_class)
             if len(final_data) == 0:
                 final_data = data
             else:
@@ -32,9 +32,8 @@ def read_data(folder_path: str) -> pd.DataFrame:
     final_data = drop_constant_col(final_data)
     final_data = drop_duplicates(final_data)
     final_data = drop_correlated_col(final_data)
-    final_data  = filter_outliers_zscore(final_data, 7)
+    final_data  = filter_outliers_zscore(final_data, num_class)
     final_data = normalize(final_data)
-
     return final_data
 
 
@@ -115,12 +114,12 @@ def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
     print (f"o tamanho do dataframe é {df.shape}")
     return df
 
-def filter_outliers_zscore(data, threshold):
+def filter_outliers_zscore(data : pd.DataFrame, threshold: int) -> pd.DataFrame:
     z_scores = np.abs(stats.zscore(data))
     outlier_mask = (z_scores > threshold).any(axis=1)
     return data[~outlier_mask]
 
-def normalize(df):
+def normalize(df: pd.DataFrame) -> pd.DataFrame:
     columns = [col for col in df.columns if col != 'Label']
     min_max_scaler = MinMaxScaler().fit(df[columns])
     df[columns] = min_max_scaler.transform(df[columns])

@@ -3,14 +3,14 @@
     {
       "numClass": 7,
       "numLeaves": [10,30,50,100],
-      "learningRate": [0.001],
+      "learningRate": [0.1],
       "nEstimators": [100]
     }
   ],
   "gradientboost":[
     {
       "numClass": 2,
-      "learningRate": [0.005],
+      "learningRate": [0.1],
       "nEstimators": [10,30,50,100],
       "subsample": [0.9],
       "maxDepth": [20]
