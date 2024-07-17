@@ -13,7 +13,7 @@ interface PaginationModel {
 export const usePaginatedData = <T,>(fetchData: (page: number, pageSize: number) => Promise<PaginatedResponse<T>>) => {
   const [data, setData] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
-  const [paginationModel, setPaginationModel] = useState<PaginationModel>({ page: 0, pageSize: 50 });
+  const [paginationModel, setPaginationModel] = useState<PaginationModel>({ page: 0, pageSize: 25 });
   const [loading, setLoading] = useState<boolean>(false);
 
   const getData = useCallback(async () => {

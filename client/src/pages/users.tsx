@@ -129,7 +129,7 @@ const UsersPage: React.FC = () => {
                     onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
                     rowSelectionModel={selectedRows}
                     rowCount={totalUsers}
-                    pageSizeOptions={[50, 100, 150]}
+                    pageSizeOptions={[25, 50, 100]}
                     paginationMode='server'
                     paginationModel={paginationModel}
                     onPaginationModelChange={setPaginationModel}

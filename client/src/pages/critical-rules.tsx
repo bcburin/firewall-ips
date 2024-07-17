@@ -22,8 +22,8 @@ const CriticalRulesPage: React.FC = () => {
     const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([]);
 
     const createModal = useModalState();
-    const updateModal = useUpdateModalState<CriticalRule | null>();
-    const deleteModal = useUpdateModalState<CriticalRule | null>();
+    const updateModal = useUpdateModalState<CriticalRule>();
+    const deleteModal = useUpdateModalState<CriticalRule>();
     const deleteMultipleModal = useUpdateModalState<null>();
 
     const deleteCriticalRuleHandler = async (id: number) => {
@@ -58,11 +58,11 @@ const CriticalRulesPage: React.FC = () => {
 
     const columns = useMemo<GridColDef<CriticalRuleRow>[]>(() => [
         { field: 'id', headerName: 'Id', width: 50 },
-        { field: 'title', headerName: 'Title', width: 150 },
+        { field: 'title', headerName: 'Title', width: 300 },
         { field: 'action', headerName: 'Action', width: 100 },
         { field: 'protocol', headerName: 'Protocol', width: 80 },
-        { field: 'srcAddress', headerName: 'Src Address', width: 100 },
-        { field: 'desAddress', headerName: 'Dest Address', width: 100 },
+        { field: 'srcAddress', headerName: 'Src Address', width: 120 },
+        { field: 'desAddress', headerName: 'Dest Address', width: 120 },
         { field: 'srcPort', headerName: 'Src Port', width: 100 },
         { field: 'desPort', headerName: 'Dest Port', width: 100 },
         { field: 'natSrcPort', headerName: 'NAT Src Port', width: 100 },
@@ -136,7 +136,7 @@ const CriticalRulesPage: React.FC = () => {
                                         onRowSelectionModelChange={(newSelectedRows) => setSelectedRows(newSelectedRows)}
                                         rowSelectionModel={selectedRows}
                                         rowCount={totalCRs}
-                                        pageSizeOptions={[50, 100, 150]}
+                                        pageSizeOptions={[25, 50, 100]}
                                         paginationMode='server'
                                         paginationModel={paginationModel}
                                         onPaginationModelChange={setPaginationModel}
