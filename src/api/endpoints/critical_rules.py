@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query
 
 from src.common.exceptions.db import NotFoundDbException, NoUpdatesProvidedDbException
 from src.models.critical_rule import CriticalRuleCreateModel, CriticalRuleUpdateModel, \
-    CriticalRuleOutModel, CriticalRule
+    CriticalRuleOutModel, CriticalRule, GetAllCriticalRules
 from src.services.database import InjectedSession
 
 router = APIRouter(prefix='/critical-rules', tags=['Critical Rules'])
@@ -10,18 +10,16 @@ router = APIRouter(prefix='/critical-rules', tags=['Critical Rules'])
 ENTITY = 'critical rule'
 
 
-@router.get('/')
+@router.get('/', response_model=GetAllCriticalRules)
 def get_all(
         session: InjectedSession,
         page: int = Query(default=0, ge=0),
         page_size: int | None = Query(default=100, ge=0, alias='pageSize'),
         ):
     total_rows = session.query(CriticalRule).count()
-    crs: list[CriticalRuleOutModel] = session.query(CriticalRule).order_by(CriticalRule.id).offset(page * page_size).limit(page_size).all()
-    return {
-        "data": crs,
-        "total": total_rows
-    }
+    crs: list[CriticalRuleOutModel] = (session.query(CriticalRule).order_by(CriticalRule.id)
+                                       .offset(page * page_size).limit(page_size).all())
+    return GetAllCriticalRules(total=total_rows, data=crs)
 
 
 @router.get('/{id}', response_model=CriticalRuleOutModel)

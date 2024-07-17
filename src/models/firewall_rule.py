@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import random
+
+from faker import Faker
 from sqlalchemy import Column
 from sqlmodel import Field, Enum as SQLModelEnum
 
@@ -30,9 +35,24 @@ class FirewallRuleOutModel(FirewallRuleBaseModel, BaseOutModel, NotifiableObject
 
 
 class GetAllFirewallRules(BaseModel):
-    data: list[FirewallRuleOutModel]
     total: int
+    data: list[FirewallRuleOutModel]
 
 
 class FirewallRule(FirewallRuleOutModel, BaseSQLModel, table=True):
-    pass
+
+    @classmethod
+    def mock(cls) -> FirewallRule:
+        fake = Faker()
+        protocol = random.choice(['tcp', 'udp', None])
+        # network parameters
+        src_address = fake.ipv4_public() if random.random() < 0.7 else None
+        des_address = fake.ipv4_public() if random.random() < 0.6 else None
+        src_port = fake.port_number() if random.random() < 0.5 else None
+        des_port = fake.port_number() if random.random() < 0.5 else None
+        # action
+        action = random.choice(list(Action))
+        action_str = action.value.capitalize()
+        return FirewallRule(
+            action=action, protocol=protocol, src_address=src_address, des_address=des_address,
+            src_port=src_port, des_port=des_port)

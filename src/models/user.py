@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import bcrypt
+from faker import Faker
 from sqlmodel import Session, SQLModel
 
 from src.common.config import ConfigurationManager
@@ -40,8 +41,8 @@ class UserOutModel(UserBaseModel, BaseOutModel):
 
 
 class GetAllUsers(SQLModel):
-    data: list[User]
     total: int
+    data: list[User]
 
 
 class User(UserOutModel, BaseSQLModel, table=True):
@@ -63,6 +64,28 @@ class User(UserOutModel, BaseSQLModel, table=True):
             new_password_hash = User.hash_password(password=update_model.new_password)
             self.update_field('password_hash', new_password_hash)
         return super().update_from(update_model)
+
+    @classmethod
+    def mock(cls) -> User:
+        fake = Faker()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        username = first_name[0:1].lower() + last_name.lower()
+        email = username + '@domain.com'
+        password_hash = cls.hash_password(password=f'{first_name[0:2].lower()}')
+        return User(first_name=first_name, last_name=last_name, username=username,
+                    email=email, active=True, password_hash=password_hash)
+
+    @classmethod
+    def create_admin_if_none_exists(cls, session: Session):
+        total_users = session.query(User).count()
+        if total_users != 0:
+            return
+        password_hash = cls.hash_password('admin')
+        first_admin = User(
+            username='admin.delete.me', email='admin@delete.me', password_hash=password_hash, first_name='Admin',
+            last_name='Delete', active=True)
+        first_admin.save(session)
 
     @staticmethod
     def hash_password(password: str) -> str:

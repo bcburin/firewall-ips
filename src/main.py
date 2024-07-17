@@ -2,6 +2,7 @@ import uvicorn
 
 from src.api.api import api
 from src.common.config import ConfigurationManager
+from src.models.user import User
 from src.services.auth import TokenAuthManager
 from src.services.database import DBSessionManager
 
@@ -13,6 +14,7 @@ def main():
     # load database and create tables from metadata
     DBSessionManager().load()
     DBSessionManager().create_db_and_tables()
+    User.create_admin_if_none_exists(DBSessionManager().get_session())
     # load authentication service
     TokenAuthManager().load()
     # run server

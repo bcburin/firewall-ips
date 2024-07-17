@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Iterable
 
 from pydantic.alias_generators import to_camel
+from sqlalchemy import exc
 from sqlmodel import SQLModel, Field, Session
 
 
@@ -53,6 +55,21 @@ class BaseSQLModel(BaseModel):
                     continue
                 setattr(self, field, new_val)
         return self
+
+    @classmethod
+    def bulk_create(cls, session: Session, iterable: Iterable[BaseSQLModel], commit: bool = True) -> bool:
+        try:
+            session.bulk_save_objects(iterable)
+            if commit:
+                session.commit()
+            return True
+        except exc.IntegrityError as e:
+            session.rollback()
+            return False
+
+    @classmethod
+    def mock(cls) -> BaseSQLModel:
+        raise NotImplemented()
 
     class Config:
         alias_generator = to_camel
