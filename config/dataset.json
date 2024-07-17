@@ -9,5 +9,23 @@
           "Pkt Len Min", "Pkt Len Max", "FIN Flag Cnt", "SYN Flag Cnt", "RST Flag Cnt", "PSH Flag Cnt", "ACK Flag Cnt", "URG Flag Cnt", "CWE Flag Count", "ECE Flag Cnt",
            "Down/Up Ratio", "Fwd Byts/b Avg", "Fwd Pkts/b Avg", "Fwd Blk Rate Avg", "Bwd Byts/b Avg", "Bwd Pkts/b Avg", "Bwd Blk Rate Avg", "Subflow Fwd Pkts", "Subflow Fwd Byts",
         "Subflow Bwd Pkts", "Init Fwd Win Byts", "Init Bwd Win Byts", "Fwd Act Data Pkts", "Fwd Seg Size Min", "Active Max", "Active Min", "Idle Max", "Idle Min", "Subflow Bwd Byts"]
+    },
+    "mapping": {
+        "SSH-Bruteforce": 1,
+        "FTP-BruteForce": 1,
+        "Brute Force -XSS": 2,
+        "Brute Force -Web": 2,
+        "SQL Injection": 2,
+        "DoS attacks-Hulk": 3,
+        "DoS attacks-SlowHTTPTest": 3,
+        "DoS attacks-Slowloris": 3,
+        "DoS attacks-GoldenEye": 3,
+        "DDOS attack-HOIC": 4,
+        "DDOS attack-LOIC-UDP": 4,
+        "DDoS attacks-LOIC-HTTP": 4,
+        "Bot": 5,
+        "Infilteration": 6,
+        "Benign": 0,
+        "Label": 0
     }
 }
