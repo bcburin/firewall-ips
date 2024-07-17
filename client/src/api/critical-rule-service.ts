@@ -7,25 +7,23 @@ export enum Action {
 }
 
 export interface CriticalRuleBase {
-    protocol?: string | null;
-    src_address?: string | null;
-    des_address?: string | null;
-    src_port?: number | null;
-    des_port?: number | null;
-    nat_src_port?: number | null;
-    nat_des_port?: number | null;
-    action: Action;
+    protocol?: string;
+    srcAddress?: string;
+    desAddress?: string;
+    srcPort?: number | '';
+    desPort?: number | '';
+    action: Action | '';
     title: string;
-    description?: string | null;
-    start_time?: Date | null;
-    end_time?: Date | null;
+    description?: string;
+    startTime?: Date | '';
+    endTime?: Date | '';
 }
 
 export interface CriticalRuleCreate extends CriticalRuleBase { }
 
 export interface CriticalRuleUpdate extends Omit<CriticalRuleBase, 'action' | 'title'> {
-    action?: Action | null;
-    title?: string | null;
+    action?: Action | '';
+    title?: string | '';
 }
 
 export interface CriticalRule extends CriticalRuleBase, BaseModel { }

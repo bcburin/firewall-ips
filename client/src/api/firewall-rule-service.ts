@@ -8,12 +8,10 @@ export enum Action {
 
 export interface FirewallRuleBase {
     protocol?: string | null;
-    src_address?: string | null;
-    des_address?: string | null;
-    src_port?: number | null;
-    des_port?: number | null;
-    nat_src_port?: number | null;
-    nat_des_port?: number | null;
+    srcAddress?: string | null;
+    desAddress?: string | null;
+    srcPort?: number | null;
+    desPort?: number | null;
     action: Action;
 }
 

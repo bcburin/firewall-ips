@@ -18,33 +18,29 @@ interface CriticalRuleCreateModelInitialValues extends CriticalRuleCreate {
 
 const CreateCriticalRuleModal: React.FC<CreateCriticalRuleModalProps> = ({ open, onClose, onConfirm }) => {
     const initialValues: CriticalRuleCreateModelInitialValues = {
-        protocol: null,
-        src_address: null,
-        des_address: null,
-        src_port: null,
-        des_port: null,
-        nat_src_port: null,
-        nat_des_port: null,
+        protocol: "",
+        srcAddress: "",
+        desAddress: "",
+        srcPort: "",
+        desPort: "",
         action: Action.Allow,
         title: "",
-        description: null,
-        start_time: null,
-        end_time: null,
-        submit: null,
+        description: "",
+        startTime: "",
+        endTime: "",
+        submit: "",
     };
 
     const validationSchema = Yup.object({
         title: Yup.string().max(100).required(),
         action: Yup.mixed<Action>().oneOf(Object.values(Action)).required(),
         protocol: Yup.string().max(250).nullable(),
-        src_address: Yup.string().max(250).nullable(),
-        des_address: Yup.string().max(250).nullable(),
-        src_port: Yup.number().min(0).max(65535).nullable(),
-        des_port: Yup.number().min(0).max(65535).nullable(),
-        nat_src_port: Yup.number().min(0).max(65535).nullable(),
-        nat_des_port: Yup.number().min(0).max(65535).nullable(),
-        start_time: Yup.date().default(new Date()).nullable(),
-        end_date: Yup.date().nullable(),
+        srcAddress: Yup.string().max(250).nullable(),
+        desAddress: Yup.string().max(250).nullable(),
+        srcPort: Yup.number().min(0).max(65535).nullable(),
+        desPort: Yup.number().min(0).max(65535).nullable(),
+        startTime: Yup.date().default(new Date()).nullable(),
+        endTime: Yup.date().nullable(),
         description: Yup.string().max(400).nullable(),
     });
 
@@ -53,17 +49,15 @@ const CreateCriticalRuleModal: React.FC<CreateCriticalRuleModalProps> = ({ open,
     const handleSubmit = async (values: typeof initialValues) => {
         const createModel: CriticalRuleCreate = {
             protocol: values.protocol,
-            src_address: values.src_address,
-            des_address: values.des_address,
-            src_port: values.src_port,
-            des_port: values.des_port,
-            nat_src_port: values.nat_src_port,
-            nat_des_port: values.nat_des_port,
+            srcAddress: values.srcAddress,
+            desAddress: values.desAddress,
+            srcPort: values.srcPort,
+            desPort: values.desPort,
             action: values.action,
             title: values.title,
             description: values.description,
-            start_time: values.start_time,
-            end_time: values.end_time,
+            startTime: values.startTime,
+            endTime: values.endTime,
         };
         await criticalRuleService.create(createModel);
         onConfirm();
