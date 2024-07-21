@@ -29,9 +29,7 @@ def read_data(folder_path: str, num_class: int) -> pd.DataFrame:
                 final_data = data
             else:
                 final_data = pd.concat([final_data, data], ignore_index=True)
-    final_data = drop_constant_col(final_data)
-    final_data = drop_duplicates(final_data)
-    final_data = drop_correlated_col(final_data)
+
     final_data  = filter_outliers_zscore(final_data, num_class)
     final_data = normalize(final_data)
     return final_data
@@ -80,12 +78,15 @@ def fix_data_type(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def drop_constant_col(df: pd.DataFrame) -> pd.DataFrame:
+    exclude_columns = ['Dst Port', 'Protocol', 'Flow Duration', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
     variances = df.var(numeric_only=True)
     constant_columns = variances[variances == 0].index
-    df = df.drop(constant_columns, axis=1)
+    columns_to_drop = [col for col in constant_columns if col not in exclude_columns]
+    df = df.drop(columns_to_drop, axis=1)
     return df
 
 def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+    exclude_columns = ['Dst Port', 'Protocol', 'Flow Duration', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
     duplicates = set()
     for i in range(0, len(df.columns)):
         col1 = df.columns[i]
@@ -95,10 +96,12 @@ def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
                 duplicates.add(col2)
 
     print (f"As colunas duplicadas são: {duplicates}")
-    df.drop(duplicates, axis=1, inplace=True)
+    columns_to_drop = [col for col in duplicates if col not in exclude_columns]
+    df = df.drop(columns_to_drop, axis=1)
     return df
 
 def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
+    exclude_columns = ['Dst Port', 'Protocol', 'Flow Duration', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
     corr = df.corr(numeric_only=True)
     correlated_col = set()
     is_correlated = [True] * len(corr.columns)
@@ -110,7 +113,9 @@ def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
                     colname = corr.columns[j]
                     is_correlated[j]=False
                     correlated_col.add(colname)
-    df.drop(correlated_col, axis=1, inplace=True)
+    
+    columns_to_drop = [col for col in correlated_col if col not in exclude_columns]
+    df = df.drop(columns_to_drop, axis=1)
     print (f"o tamanho do dataframe é {df.shape}")
     return df
 
@@ -124,3 +129,6 @@ def normalize(df: pd.DataFrame) -> pd.DataFrame:
     min_max_scaler = MinMaxScaler().fit(df[columns])
     df[columns] = min_max_scaler.transform(df[columns])
     return df
+
+def filter_col(df: pd.DataFrame, col: list[str]) -> pd.DataFrame:
+    return df[col]

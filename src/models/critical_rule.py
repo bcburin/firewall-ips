@@ -32,7 +32,7 @@ class CriticalRuleBaseModel(BaseModel, table=False):
     def check_start_and_end_times(self):
         start_time = self.start_time
         end_time = self.end_time
-        if start_time and end_time and end_time <= start_time:
+        if start_time and end_time and end_time < start_time:
             raise ValueError('end_time must be greater than start_time')
         return self
 

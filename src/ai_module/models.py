@@ -30,6 +30,5 @@ def create_estimator(df):
     mlp_classifier = MLPClassifier()
     knn_model = KNeighborsClassifier()
     dt_model = DecisionTreeClassifier(max_depth=3, random_state=42)
-    estimators = [('lightgbm',lgbm_model),('gradientboost',gbdt_model),('logisticregression',lr_model),('multilayerperceptron',mlp_classifier),
-                  ('randomforest',rf_model),('nn',nn_model),('knn',knn_model)]
+    estimators = [('lightgbm',lgbm_model)]
     return estimators

@@ -24,7 +24,6 @@
         "DDOS attack-LOIC-UDP": 4,
         "DDoS attacks-LOIC-HTTP": 4,
         "Bot": 5,
-        "Infilteration": 6,
         "Benign": 0,
         "Label": 0
     }
