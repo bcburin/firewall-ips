@@ -31,7 +31,6 @@ def read_data(folder_path: str, num_class: int) -> pd.DataFrame:
                 final_data = pd.concat([final_data, data], ignore_index=True)
 
     final_data  = filter_outliers_zscore(final_data, num_class)
-    final_data = normalize(final_data)
     return final_data
 
 
@@ -130,5 +129,11 @@ def normalize(df: pd.DataFrame) -> pd.DataFrame:
     df[columns] = min_max_scaler.transform(df[columns])
     return df
 
-def filter_col(df: pd.DataFrame, col: list[str]) -> pd.DataFrame:
+def select_col(df: pd.DataFrame, col: list[str]) -> pd.DataFrame:
     return df[col]
+
+def filter_col(df: pd.DataFrame) -> pd.DataFrame:
+    df = drop_constant_col(df)
+    df = drop_duplicates(df)
+    df = drop_correlated_col(df)
+    return df
