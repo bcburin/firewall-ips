@@ -11,19 +11,21 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator
 
-from src.models.critical_rule import CriticalRuleBaseModel
+from src.models.firewall_rule import FirewallRuleBaseModel
 from src.common.utils import filter_dict
 from src.common.config import BaseAIModelConfig
 from src.ai_module.models import select_hyperparameter
 from src.ai_module.utils.new_dataset import normalize
+from src.models.enums import Action
+from src.common.persistence import PersistableObject
 
-
-class AiModule():
+class AiModule(PersistableObject):
 
     def __init__(self, list_models: List[Tuple[str, BaseEstimator]], config: BaseAIModelConfig, df: pd.DataFrame) -> None:
         self.config = config.model_dump()
-        self.col = df.columns
+        self.columns = df.columns
         self.list_models = list_models
+        self.ensemble_model = None
     
     def create_ensemble(self, df):
         for i, tupla in enumerate(self.list_models):
@@ -35,10 +37,10 @@ class AiModule():
         self.ensemble_model = VotingClassifier(estimators=self.list_models, voting='soft')
     
     def _load(self, model_bytes: bytes) -> None:
-        self.ensemble_model = pickle.loads(model_bytes)
+        self.ensemble_model, self.columns = pickle.loads(model_bytes)
         
     def _dump(self) -> bytes:
-        return pickle.dumps(self.ensemble_model)     
+        return pickle.dumps([self.ensemble_model, self.columns])     
 
     def train(self,  df : pd.DataFrame) -> np.ndarray:
         x_train = df.drop('Label', axis=1)
@@ -55,24 +57,19 @@ class AiModule():
         print(classification_report(y_test, y_pred))
         print(confusion_matrix(y_test, y_pred))
     
-    def change_model(self, file_path, col_path) -> None:
+    def change_model(self, file_path) -> None:
         with open(file_path, 'rb') as file:
             model_byte = file.read()
         self._load(model_byte)
-        with open(col_path, 'r') as file:
-            list_col = file.read()
-        self.col = ast.literal_eval(list_col)
-
     
-    def save_model(self, file_path, col_path):
-        model_byte = self._dump()
-        column_list = self.col.to_list()
+    def save_model(self, file_path):
+        model_byte = self._dump()    
         with open(file_path, 'wb') as file:
             file.write(model_byte)
-        with open(col_path, 'w') as file:
-            json.dump(column_list, file)
-    
-    def create_rules(self, df: pd.DataFrame, config: dict) -> list[CriticalRuleBaseModel]:
+
+    def evaluate_package(self, df: pd.DataFrame, dataset_config_path: str) -> list[FirewallRuleBaseModel]:
+        with open(dataset_config_path, 'r', encoding='utf-8') as file:
+            config = json.load(file)
         protocol_map = config['protocol']
         normalized_df = normalize(df.copy())
         set_rules = set()
@@ -83,10 +80,10 @@ class AiModule():
                 original_row : pd.Series = df.loc[index]
                 label = self.predict(row.to_frame().T)
                 if label != 0:
-                    set_rules.add(tuple(original_row[['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']].tolist()) + ("block",))
+                    set_rules.add(tuple(original_row[['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']].tolist()) + (Action.BLOCK,))
                 pbar.update(1)
         for rule in set_rules:
-            critical_rule_instance = CriticalRuleBaseModel(
+            critical_rule_instance = FirewallRuleBaseModel(
                 dst_port=int(rule[0]),
                 protocol=protocol_map[int(rule[1])],
                 min_fl_byt_s=rule[2] * 0.95,  

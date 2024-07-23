@@ -1,4 +1,10 @@
 {
+    "coulmns": [
+        {
+            "name": "Fwd Pkt Len Mean",
+            "type": "float"
+        }
+    ],
     "variables_type":{
         "float": ["Fwd Pkt Len Mean", "Fwd Pkt Len Std", "Bwd Pkt Len Mean", "Bwd Pkt Len Std", "Flow Byts/s", "Flow Pkts/s", "Flow IAT Mean", "Flow IAT Std", "Fwd IAT Mean", 
         "Fwd IAT Std", "Bwd IAT Mean", "Bwd IAT Std", "Fwd Pkts/s", "Bwd Pkts/s", "Pkt Len Mean", "Pkt Len Std", "Pkt Len Var", "Pkt Size Avg", "Fwd Seg Size Avg",
