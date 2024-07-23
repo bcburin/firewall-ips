@@ -26,5 +26,25 @@
         "Bot": 5,
         "Benign": 0,
         "Label": 0
-    }
+    },
+    "protocol": [
+        "HOPOPT",
+        "ICMP",
+        "IGMP",
+        "GGP",
+        "IPv4",
+        "ST",
+        "TCP",
+        "CBT",
+        "EGP",
+        "IGP",
+        "BBN-RCC-MON",
+        "NVP-II",
+        "PUP",
+        "ARGUS (deprecated)",
+        "EMCON",
+        "XNET",
+        "CHAOS",
+        "UDP"
+    ]
 }

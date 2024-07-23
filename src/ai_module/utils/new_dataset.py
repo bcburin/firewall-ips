@@ -77,7 +77,7 @@ def fix_data_type(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def drop_constant_col(df: pd.DataFrame) -> pd.DataFrame:
-    exclude_columns = ['Dst Port', 'Protocol', 'Flow Duration', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
+    exclude_columns = ['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
     variances = df.var(numeric_only=True)
     constant_columns = variances[variances == 0].index
     columns_to_drop = [col for col in constant_columns if col not in exclude_columns]
@@ -85,7 +85,7 @@ def drop_constant_col(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
-    exclude_columns = ['Dst Port', 'Protocol', 'Flow Duration', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
+    exclude_columns = ['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
     duplicates = set()
     for i in range(0, len(df.columns)):
         col1 = df.columns[i]
@@ -100,7 +100,7 @@ def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
-    exclude_columns = ['Dst Port', 'Protocol', 'Flow Duration', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
+    exclude_columns = ['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
     corr = df.corr(numeric_only=True)
     correlated_col = set()
     is_correlated = [True] * len(corr.columns)
