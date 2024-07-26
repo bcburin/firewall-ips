@@ -67,9 +67,7 @@ class AiModule(PersistableObject):
         with open(file_path, 'wb') as file:
             file.write(model_byte)
 
-    def evaluate_package(self, df: pd.DataFrame, dataset_config_path: str) -> list[FirewallRuleBaseModel]:
-        with open(dataset_config_path, 'r', encoding='utf-8') as file:
-            config = json.load(file)
+    def evaluate_package(self, df: pd.DataFrame, config : dict) -> list[FirewallRuleBaseModel]:
         protocol_map = config['protocol']
         normalized_df = normalize(df.copy())
         set_rules = set()

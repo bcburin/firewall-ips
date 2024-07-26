@@ -8,15 +8,16 @@ from scipy import stats
 from sklearn.preprocessing import MinMaxScaler
 
 
-def prepare_data(df: pd.DataFrame, n_class : int = 2, k : int = 5000) -> pd.DataFrame:
-    df = fix_data_type(df)
+def prepare_data(df: pd.DataFrame, config : dict, n_class : int = 2, k : int = 5000) -> pd.DataFrame:
+    df = fix_data_type(df, config)
     df = drop_infinate_null(df)
-    df = generate_multi_label(df)
+    df = generate_multi_label(df, config)
     df = drop_unnecessary_column(df)
     df = stratified_sample(df, k, n_class)
     return df
 
-def read_data(folder_path: str, num_class: int) -> pd.DataFrame:
+def read_data(folder_path: str, config: dict) -> pd.DataFrame:
+    num_class = config['num_class']
     warnings.filterwarnings("ignore")
     final_data: pd.DataFrame = pd.DataFrame()
     for filename in os.listdir(folder_path):
@@ -24,7 +25,7 @@ def read_data(folder_path: str, num_class: int) -> pd.DataFrame:
         file_path = os.path.join(folder_path, filename)
         if os.path.isfile(file_path):
             data = pd.read_csv(file_path, low_memory=False)
-            data = prepare_data(data, num_class)
+            data = prepare_data(data, config, num_class)
             if len(final_data) == 0:
                 final_data = data
             else:
@@ -57,35 +58,31 @@ def generate_binary_label(df: pd.DataFrame) -> pd.DataFrame:
     df["Label"] = df['Label'].apply(lambda x: 1 if x == 'Benign' else 0)
     return df
 
-def generate_multi_label(df: pd.DataFrame) -> pd.DataFrame:
-    with open('config/dataset.json', 'r') as file:
-        config = json.load(file)
+def generate_multi_label(df: pd.DataFrame, config : dict) -> pd.DataFrame:
     mapping = config['mapping']
     df['Label'] = df['Label'].map(mapping) 
     return df
 
-def fix_data_type(df: pd.DataFrame) -> pd.DataFrame:
-    with open('config/dataset.json', 'r') as file:
-        config = json.load(file)
-    int_var = config['variables_type']['int']
-    float_var = config['variables_type']['float']
-    df = df[df['Dst Port'] != 'Dst Port']
-    for var in int_var:
-        df[var] = df[var].astype(int)
-    for var in float_var:
-        df[var] = df[var].astype(float)
+def fix_data_type(df: pd.DataFrame, config : dict) -> pd.DataFrame:
+    columns = config['columns']
+    for col in columns:
+        col_name = col["name"]
+        col_type = col["type"]
+        if col_type == "float":
+            df[col_name] = pd.to_numeric(df[col_name], errors='coerce')
+        elif col_type == "int":
+            df[col_name] = pd.to_numeric(df[col_name], errors='coerce', downcast='integer')
     return df
-
-def drop_constant_col(df: pd.DataFrame) -> pd.DataFrame:
-    exclude_columns = ['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
+def drop_constant_col(df: pd.DataFrame, config : dict) -> pd.DataFrame:
+    exclude_columns = config['rule_variables']
     variances = df.var(numeric_only=True)
     constant_columns = variances[variances == 0].index
     columns_to_drop = [col for col in constant_columns if col not in exclude_columns]
     df = df.drop(columns_to_drop, axis=1)
     return df
 
-def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
-    exclude_columns = ['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
+def drop_duplicates(df: pd.DataFrame, config : dict) -> pd.DataFrame:
+    exclude_columns = config['rule_variables']
     duplicates = set()
     for i in range(0, len(df.columns)):
         col1 = df.columns[i]
@@ -99,8 +96,8 @@ def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns_to_drop, axis=1)
     return df
 
-def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
-    exclude_columns = ['Dst Port', 'Protocol', 'Flow Byts/s', 'Flow Pkts/s', 'Tot Fwd Pkts', 'Tot Bwd Pkts']
+def drop_correlated_col(df: pd.DataFrame, config: dict) -> pd.DataFrame:
+    exclude_columns = config['rule_variables']
     corr = df.corr(numeric_only=True)
     correlated_col = set()
     is_correlated = [True] * len(corr.columns)
@@ -132,8 +129,8 @@ def normalize(df: pd.DataFrame) -> pd.DataFrame:
 def select_col(df: pd.DataFrame, col: list[str]) -> pd.DataFrame:
     return df[col]
 
-def filter_col(df: pd.DataFrame) -> pd.DataFrame:
-    df = drop_constant_col(df)
-    df = drop_duplicates(df)
-    df = drop_correlated_col(df)
+def filter_col(df: pd.DataFrame, config : dict) -> pd.DataFrame:
+    df = drop_constant_col(df, config)
+    df = drop_duplicates(df, config)
+    df = drop_correlated_col(df, config)
     return df
