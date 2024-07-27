@@ -1,4 +1,4 @@
-from src.ai_module.pipeline import train_pipeline
+from src.ai_module.pipeline import train_pipeline, test_pipeline
 
 
 if __name__ == "__main__":

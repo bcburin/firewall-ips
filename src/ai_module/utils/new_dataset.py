@@ -2,13 +2,13 @@ import pandas as pd
 import numpy as np
 import os
 import warnings
-import json
+from collections import Counter
 
 from scipy import stats
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.utils import class_weight
 
-
-def prepare_data(df: pd.DataFrame, config : dict, n_class : int = 2, k : int = 5000) -> pd.DataFrame:
+def prepare_data(df: pd.DataFrame, config : dict, n_class : int = 2, k : int = 5000000) -> pd.DataFrame:
     df = fix_data_type(df, config)
     df = drop_infinate_null(df)
     df = generate_multi_label(df, config)
@@ -40,6 +40,8 @@ def stratified_sample(df: pd.DataFrame, k: int, n_classes: int) -> pd.DataFrame:
     for i in range(n_classes):
         df_aux = df[df["Label"] == i]
         sample_size = min(k, len(df_aux))
+        if i == 0:
+            sample_size = int(sample_size/5)
         df_aux = df_aux.sample(n = sample_size)
         df_sampled = pd.concat([df_sampled, df_aux])
     return df_sampled
@@ -55,7 +57,7 @@ def drop_unnecessary_column(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def generate_binary_label(df: pd.DataFrame) -> pd.DataFrame:
-    df["Label"] = df['Label'].apply(lambda x: 1 if x == 'Benign' else 0)
+    df["Label"] = df['Label'].apply(lambda x: 0 if x == 'Benign' else 1)
     return df
 
 def generate_multi_label(df: pd.DataFrame, config : dict) -> pd.DataFrame:
@@ -134,3 +136,13 @@ def filter_col(df: pd.DataFrame, config : dict) -> pd.DataFrame:
     df = drop_duplicates(df, config)
     df = drop_correlated_col(df, config)
     return df
+
+def calculate_weights(df: pd.DataFrame):
+    order_label_list = np.unique(df['Label'])
+    class_weights = class_weight.compute_class_weight('balanced',
+                                                 classes=order_label_list,
+                                                 y=df['Label'].values)
+
+    class_weights = {k: v for k,v in enumerate(class_weights)}
+    print(class_weights)
+    return class_weights

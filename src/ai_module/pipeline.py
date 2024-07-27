@@ -16,13 +16,14 @@ def train_pipeline(data_path: str, model_path: str, dataset_config_path: str) ->
     df = read_data(data_path, config)
     df = normalize(df)
     df = filter_col(df, config)
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=2, shuffle=True)
+    train_df, test_df = train_test_split(df, test_size=0.95, random_state=2, shuffle=True)
     estimator = create_estimator(df)
     ai_module = AiModule(estimator, model_training_config, train_df)
     ai_module.create_ensemble(train_df)
     ai_module.train(train_df)
     ai_module.evaluate(test_df)
-    ai_module.save_model(model_path) #retornar o modelo em si
+    ai_module.save_model(model_path) 
+    return ai_module.ensemble_model
 
 def test_pipeline(data_path: str, model_path: str, dataset_config_path: str) -> None:
     with open(dataset_config_path, 'r') as file:

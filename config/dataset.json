@@ -352,5 +352,5 @@
     ],
     "num_class" : 6,
     "rule_variables": ["Dst Port", "Protocol", "Flow Byts/s", "Flow Pkts/s", "Tot Fwd Pkts", "Tot Bwd Pkts"],
-    "rule_names" : []
+    "rule_names" : ["dst_port", "protocol", "fl_byt_s", "fl_pkt_s", "tot_fw_pk", "tot_bw_pk", "action"]
 }
