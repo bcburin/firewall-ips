@@ -168,7 +168,8 @@ cython_debug/
 *.gz
 #Folder size is bigger than 2.5 Gb
 data/final_data
-
+#plot file
+src/ai_module/plots
 # client side files
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.

@@ -1,6 +1,7 @@
 import pickle
 from typing import List, Tuple
 
+import shap
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
@@ -8,12 +9,13 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator
+import matplotlib.pyplot as plt
 
 from src.models.firewall_rule import FirewallRuleBaseModel
 from src.common.utils import filter_dict
 from src.common.config import BaseAIModelConfig
 from src.ai_module.models import select_hyperparameter
-from src.ai_module.utils.new_dataset import normalize, calculate_weights
+from src.ai_module.utils.new_dataset import normalize
 from src.models.enums import Action
 from src.common.persistence import PersistableObject
 
@@ -95,3 +97,28 @@ class AiModule(PersistableObject):
             rules.append(critical_rule_instance)
         return rules
     
+    def save_shap_plots(self, shap_values, class_index, class_name, model_name):
+        # Bar plot
+        shap.plots.bar(shap_values[:, :, class_index], show = False)
+        plt.savefig(f"src/ai_module/plots/{model_name}/{model_name}_{class_name}_feature_importance.png", bbox_inches='tight')
+        plt.close()
+
+        # Beeswarm plot
+        shap.plots.beeswarm(shap_values[:, :, class_index], show = False)
+        plt.savefig(f"src/ai_module/plots/{model_name}/{model_name}_{class_name}_shap.png", bbox_inches='tight')
+        plt.close()
+
+
+
+    def shap_metrics(self, df_train: pd.DataFrame, df_test: pd.DataFrame, model_name):
+        X_train = df_train.drop('Label', axis=1)
+        X_test = df_test.drop('Label', axis=1)
+        X_sub = shap.sample(X_train, 1000)
+        explainer = shap.Explainer(self.ensemble_model.predict_proba, X_sub)
+        shap_values = explainer(X_test[0:2000])
+        self.save_shap_plots(shap_values, 0, "allow", model_name)
+        self.save_shap_plots(shap_values, 1, "bruteforce", model_name)
+        self.save_shap_plots(shap_values, 2, "web", model_name)
+        self.save_shap_plots(shap_values, 3, "DOS", model_name)
+        self.save_shap_plots(shap_values, 4, "DDOS", model_name)
+        self.save_shap_plots(shap_values, 5, "botnet", model_name)
