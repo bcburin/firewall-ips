@@ -108,6 +108,11 @@ class NotificationConfig(BaseModel):
     max_queue_size: int = 128
     methods: MethodsConfig
 
+    def has_any_method(self):
+        if self.methods.email is not None:
+            return True
+        return False
+
 
 class AIModuleConfig(BaseModel):
     class TrainingConfig(BaseModel):
@@ -236,6 +241,9 @@ class ConfigurationManager(LoadableSingleton):
 
     def get_database_config(self, redact_sensitive_data: bool = False) -> DbConfig:
         return self.get_server_config(redact_sensitive_data=redact_sensitive_data).database
+
+    def get_notification_config(self) -> NotificationConfig:
+        return self.get_server_config().notification
 
     def _get_redacted_copy_of_server_config(self):
         config_copy = self._server_config.model_copy(deep=True)

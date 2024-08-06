@@ -8,9 +8,9 @@ from typing import Generic, Type
 
 from jinja2 import Environment, FileSystemLoader
 
-from src.common.config import ServerConfig, EmailNotificationConfig, NotificationConfig, ConfigurationManager
+from src.common.config import EmailNotificationConfig, NotificationConfig, ConfigurationManager
 from src.common.notification import NotifiableObjectType, NotifiableObject
-from src.common.utils import Singleton
+from src.common.utils import LoadableSingleton
 from src.models.enums import Action
 from src.models.firewall_rule import FirewallRuleOutModel
 
@@ -102,16 +102,22 @@ class FWRuleEmailNotificationService(EmailNotificationService[FirewallRuleOutMod
         return self._template.render(context)
 
 
-class FWRuleNotificationServiceManager(metaclass=Singleton):
+class FWRuleNotificationServiceManager(LoadableSingleton):
 
     def __init__(self):
-        self._notification_services = []
-        config: NotificationConfig = ConfigurationManager().get_server_config().notification
-        self._enabled = config.enable
-        if not self._enabled:
+        self._notification_services: list[NotificationService] = []
+        self._config: NotificationConfig | None = None
+        super().__init__()
+
+    def _load(self):
+        self._config = ConfigurationManager().get_notification_config()
+        if self._config is None or not self._config.enable:
             return
-        if config.methods.email is not None:
-            self._notification_services.append(FWRuleEmailNotificationService(config=config.methods.email))
+        if self._config.methods.email is not None:
+            self._notification_services.append(FWRuleEmailNotificationService(config=self._config.methods.email))
+
+    def _loaded(self):
+        return self._config is not None and (self._notification_services or not self._config.has_any_method())
 
     def enqueue_notification(self, notification: FirewallRuleOutModel):
         for service in self._notification_services:
