@@ -12,7 +12,7 @@ from pydantic import BaseModel, TypeAdapter, Field
 from src.common.exceptions.config import ConfigurationNotLoaded
 from src.common.utils import get_config_dir, convert_dict_keys_camel_to_snake, \
     resolve_variables_in_path, create_dir_if_not_exists, CompressionTool, ZipCompressionTool, GzipCompressionTool, \
-    Singleton
+    LoadableSingleton
 
 
 class CompressionToolOption(str, Enum):
@@ -192,8 +192,10 @@ class SVMConfig(BaseAIModelConfig):
     kernel: list[str]
     degree: list[int]
 
+
 class KNNConfig(BaseAIModelConfig):
     n_neighbors: list[int]
+
 
 class NNConfig(BaseAIModelConfig):
     learning_rate: list[float]
@@ -212,37 +214,41 @@ class AIModelsTrainingConfig(BaseConfig):
     nn: list[NNConfig]
 
 
-class ConfigurationManager(metaclass=Singleton):
+class ConfigurationManager(LoadableSingleton):
 
     def __init__(self):
         self._server_config: ServerConfig | None = None
         self._ai_models_config: AIModelsTrainingConfig | None = None
+        super().__init__()
 
-    def load_configs(self):
+    def _load(self):
         self._server_config = ServerConfig.read_file()
         self._ai_models_config = AIModelsTrainingConfig.read_file()
 
+    def _loaded(self) -> bool:
+        return self._server_config is not None and self._ai_models_config is not None
+
     def get_server_config(self, redact_sensitive_data: bool = False) -> ServerConfig:
-        if self._server_config is None:
-            self.load_configs()
-            if self._server_config is None:
-                raise ConfigurationNotLoaded("cannot retrieve server configs")
-        if redact_sensitive_data:
-            config_copy = self._server_config.model_copy(deep=True)
-            config_copy.database.password = "<password>"
-            if config_copy.notification.methods.email:
-                config_copy.notification.methods.email.sender.email = "<email>"
-                config_copy.notification.methods.email.sender.password = "<password>"
-            config_copy.authentication.token.key = "<key>"
-            return config_copy
-        return self._server_config
+        with self.load_guard(ex=ConfigurationNotLoaded("cannot retrieve server configs")):
+            if redact_sensitive_data:
+                return self._get_redacted_copy_of_server_config()
+            return self._server_config
+
+    def get_database_config(self, redact_sensitive_data: bool = False) -> DbConfig:
+        return self.get_server_config(redact_sensitive_data=redact_sensitive_data).database
+
+    def _get_redacted_copy_of_server_config(self):
+        config_copy = self._server_config.model_copy(deep=True)
+        config_copy.database.password = "<password>"
+        if config_copy.notification.methods.email:
+            config_copy.notification.methods.email.sender.email = "<email>"
+            config_copy.notification.methods.email.sender.password = "<password>"
+        config_copy.authentication.token.key = "<key>"
+        return config_copy
 
     def get_ai_models_training_config(self) -> AIModelsTrainingConfig:
-        if self._ai_models_config is None:
-            self.load_configs()
-            if self._server_config is None:
-                raise ConfigurationNotLoaded("cannot retrieve AI model training configs")
-        return self._ai_models_config
+        with self.load_guard(ex=ConfigurationNotLoaded("cannot retrieve AI model training configs")):
+            return self._ai_models_config
 
 
 configuration_manager = ConfigurationManager()

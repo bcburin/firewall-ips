@@ -3,11 +3,12 @@ import re
 import shutil
 import zipfile
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from functools import cache
 from pathlib import Path
+from threading import Lock
 from typing import Callable
 import inspect
-
 
 
 def create_dir_if_not_exists(f: Callable[..., Path]) -> Callable[..., Path]:
@@ -85,6 +86,38 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+
+class LoadableSingleton(metaclass=Singleton):
+    def __init__(self):
+        self.load_lock = Lock()
+
+    def _load(self):
+        raise NotImplemented()
+
+    def _loaded(self):
+        raise NotImplemented()
+
+    def load(self):
+        with self.load_lock:
+            for _ in range(3):
+                if self._loaded():
+                    break
+                self._load()
+
+    @property
+    def loaded(self) -> bool:
+        with self.load_lock:
+            return self._loaded()
+
+    @contextmanager
+    def load_guard(self, ex: Exception):
+        with self.load_lock:
+            if not self._loaded():
+                self._load()
+                if not self._loaded():
+                    raise ex
+        yield
 
 
 class CompressionTool(ABC):

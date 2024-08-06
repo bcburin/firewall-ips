@@ -9,7 +9,7 @@ from src.services.database import DBSessionManager
 
 def main():
     # load configurations from config files
-    ConfigurationManager().load_configs()
+    ConfigurationManager().load()
     config = ConfigurationManager().get_server_config()
     # load database and create tables from metadata
     DBSessionManager().load()

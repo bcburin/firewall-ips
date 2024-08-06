@@ -123,7 +123,7 @@ class FWRuleNotificationServiceManager(metaclass=Singleton):
 
 
 if __name__ == '__main__':
-    ConfigurationManager().load_configs()
+    ConfigurationManager().load()
     manager = FWRuleNotificationServiceManager()
     manager.enqueue_notification(FirewallRuleOutModel(src_port=100, des_port=567, action=Action.DROP))
     manager.enqueue_notification(FirewallRuleOutModel(src_port=127, des_port=568, action=Action.BLOCK))
