@@ -10,8 +10,8 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from src.common.auth import TokenAuthService
 from src.common.config import InjectedTokenConfig, AuthConfig, ConfigurationManager
-from src.common.exceptions.auth import AuthenticationServiceNotLoadedException
-from src.common.utils import Singleton
+from src.common.exceptions.auth import AuthenticationServiceNotLoadedException, UnknownAuthenticationService
+from src.common.utils import Singleton, LoadableSingleton
 from src.models.user import UserOutModel, User
 from src.services.database import InjectedSession
 
@@ -38,21 +38,28 @@ class JWTAuthService(TokenAuthService):
             return None
 
 
-class TokenAuthManager(metaclass=Singleton):
+class TokenAuthManager(LoadableSingleton):
 
     def __init__(self):
+        self._config: AuthConfig | None = None
         self._service: Type[TokenAuthService] | None = None
+        super().__init__()
 
-    def load(self):
-        config = ConfigurationManager().get_server_config().authentication
-        self._service = JWTAuthService if config.login.method == "JWTAuthService" else None
+    def _load(self):
+        self._config = ConfigurationManager().get_auth_config()
+        if self._config is None:
+            return
+        if self._config.login.method == "JWTAuthService":
+            self._service = JWTAuthService
+        else:
+            raise UnknownAuthenticationService(self._config.login.method)
+
+    def _loaded(self) -> bool:
+        return self._config is not None and self._service is not None
 
     def get_service(self, session: Session, config: AuthConfig.TokenConfig) -> TokenAuthService:
-        if self._service is None:
-            self.load()
-            if self._service is None:
-                raise AuthenticationServiceNotLoadedException()
-        return self._service(session, config)
+        with self.load_guard(ex=AuthenticationServiceNotLoadedException()):
+            return self._service(session, config)
 
     def generate_token(self, user: User, session: Session, config: AuthConfig.TokenConfig):
         return self.get_service(session, config).generate_token(user)

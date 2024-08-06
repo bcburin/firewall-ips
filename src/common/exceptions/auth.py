@@ -26,6 +26,11 @@ class AuthenticationServiceNotLoadedException(IHTTPExceptionProvider):
         return HTTPException(status_code=HTTP_501_NOT_IMPLEMENTED, detail=self.message)
 
 
+class UnknownAuthenticationService(Exception):
+    def __init__(self, name: str):
+        super().__init__(f"Unknown authentication service: {name}")
+
+
 class IncorrectCredentialsException(IHTTPExceptionProvider):
     def get_http_exception(self) -> HTTPException:
         message = 'Incorrect email or password.'

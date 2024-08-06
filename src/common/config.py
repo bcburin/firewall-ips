@@ -245,6 +245,9 @@ class ConfigurationManager(LoadableSingleton):
     def get_notification_config(self) -> NotificationConfig:
         return self.get_server_config().notification
 
+    def get_auth_config(self) -> AuthConfig:
+        return self.get_server_config().authentication
+
     def _get_redacted_copy_of_server_config(self):
         config_copy = self._server_config.model_copy(deep=True)
         config_copy.database.password = "<password>"
