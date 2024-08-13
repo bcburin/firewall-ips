@@ -1,7 +1,7 @@
 {
   "lightgbm": [
     {
-      "numClass": 7,
+      "numClass": 6,
       "numLeaves": [10,30,50,100],
       "learningRate": [0.1],
       "nEstimators": [100]

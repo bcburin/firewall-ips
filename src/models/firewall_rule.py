@@ -12,13 +12,16 @@ from src.models.enums import Action
 
 
 class FirewallRuleBaseModel(BaseModel, table=False):
+    dst_port: int | None = None
     protocol: str | None = None
-    src_address: str | None = None
-    des_address: str | None = None
-    src_port: int | None = None
-    des_port: int | None = None
-    nat_src_port: int | None = None
-    nat_des_port: int | None = None
+    min_fl_byt_s: float | None = None
+    max_fl_byt_s: float | None = None
+    min_fl_pkt_s: float | None = None
+    max_fl_pkt_s: float | None = None
+    min_tot_fw_pk: int | None = None
+    max_tot_fw_pk: int | None = None
+    min_tot_bw_pk: int | None = None
+    max_tot_bw_pk: int | None = None
     action: Action = Field(sa_column=Column(SQLModelEnum(Action)))
 
 
