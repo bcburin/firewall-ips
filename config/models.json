@@ -1,7 +1,7 @@
 {
   "lightgbm": [
     {
-      "numClass": 6,
+      "numClass": 7,
       "numLeaves": [10,30,50,100],
       "learningRate": [0.1],
       "nEstimators": [100]
@@ -9,7 +9,7 @@
   ],
   "gradientboost":[
     {
-      "numClass": 2,
+      "numClass": 7,
       "learningRate": [0.1],
       "nEstimators": [10,30,50,100],
       "subsample": [0.9],
@@ -18,13 +18,13 @@
   ],
   "logisticregression":[
     {
-      "numClass": 2,
+      "numClass": 7,
       "penalty": ["l2"]
     }
   ],
   "multilayerperceptron":[
     {
-      "numClass": 2,
+      "numClass": 7,
       "hiddenLayer": [100],
       "momentum": [0.1,0.3,0.5,0.7,0.9],
       "earlyStopping": [0]
@@ -32,27 +32,27 @@
   ],
   "randomforest":[
     {
-      "numClass": 2,
+      "numClass": 7,
       "nEstimators": [10,30,50,100],
       "criterion": ["gini", "entropy", "log_loss"]
     }
   ],
   "svm":[
     {
-      "numClass": 2,
+      "numClass": 7,
       "kernel": ["rbf","linear","sigmoid"],
       "degree": [2]
     }
   ],
   "nn":[
     {
-      "numClass" : 2,
+      "numClass" : 7,
       "learningRate": [0.001]
     }
   ],
   "knn":[
     {
-      "numClass" : 2,
+      "numClass" : 7,
       "nNeighbors": [5, 10, 15]  
   }
   ]

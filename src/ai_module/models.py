@@ -33,6 +33,7 @@ def create_estimator(df):
     knn_model = KNeighborsClassifier()
     estimators = [('lightgbm',lgbm_model),('gradientboost',gbdt_model),('logisticregression',lr_model),('randomforest',rf_model),
                   ('multilayerperceptron',mlp_classifier), ('knn',knn_model), ('nn',nn_model)]
+    estimators = [('lightgbm',lgbm_model)]
     return estimators
 
 def create_models(df):

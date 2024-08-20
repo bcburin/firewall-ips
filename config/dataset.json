@@ -327,6 +327,7 @@
         "DDOS attack-LOIC-UDP": 4,
         "DDoS attacks-LOIC-HTTP": 4,
         "Bot": 5,
+        "Infilteration": 6,
         "Benign": 0,
         "Label": 0
     },
@@ -350,7 +351,7 @@
         "CHAOS",
         "UDP"
     ],
-    "num_class" : 6,
+    "num_class" : 7,
     "rule_variables": ["Dst Port", "Protocol", "Flow Byts/s", "Flow Pkts/s", "Tot Fwd Pkts", "Tot Bwd Pkts"],
     "rule_names" : ["dst_port", "protocol", "fl_byt_s", "fl_pkt_s", "tot_fw_pk", "tot_bw_pk", "action"]
 }
