@@ -4,6 +4,7 @@ from threading import Lock
 from typing import Generic, Iterable, Type
 
 from src.common.config import CompressionToolOption, PersistenceConfig, ConfigurationManager
+from src.common.exceptions.persistence import UnexpectedPersistableObjectTypeException
 from src.common.persistence import PersistableObject, PersistableObjectType
 from src.common.utils import LoadableSingleton
 
@@ -45,7 +46,7 @@ class VersionedObjectManager(Generic[PersistableObjectType], LoadableSingleton):
 
     def load_new_version(self, obj: PersistableObject):
         if not isinstance(obj, self._cls):
-            raise Exception()
+            raise UnexpectedPersistableObjectTypeException(expected_type=self._cls, unexpected_type=obj.__class__)
         with self._obj_lock:
             self._obj = obj
         with self.load_guard(), self._repository_lock:
