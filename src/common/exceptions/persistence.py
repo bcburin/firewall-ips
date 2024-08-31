@@ -1,0 +1,3 @@
+
+class NotLoadedException(Exception):
+    pass

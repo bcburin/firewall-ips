@@ -62,12 +62,15 @@ class PersistenceConfig(BaseModel):
     class CompressionConfig(BaseModel):
         enable: bool = True
         tool: CompressionToolOption = CompressionToolOption.ZIP
-        compress_latest_model: bool = False
 
-    directory: str = '$root/archive'
+        @property
+        def resolved_tool(self) -> CompressionTool:
+            return CompressionToolOption.get_tool_implementation(self.tool)
+
+    directory: str = '$root/repository'
+    load_latest_on_start: bool = True
     max_saved_models: int | None = None
     compression: CompressionConfig
-    enable: bool = True
 
     @cached_property
     @create_dir_if_not_exists
@@ -233,8 +236,12 @@ class ConfigurationManager(LoadableSingleton):
     def _loaded(self) -> bool:
         return self._server_config is not None and self._ai_models_config is not None
 
+    @property
+    def _not_loaded_exception(self) -> Exception:
+        return ConfigurationNotLoaded("cannot load configs")
+
     def get_server_config(self, redact_sensitive_data: bool = False) -> ServerConfig:
-        with self.load_guard(ex=ConfigurationNotLoaded("cannot retrieve server configs")):
+        with self.load_guard():
             if redact_sensitive_data:
                 return self._get_redacted_copy_of_server_config()
             return self._server_config
@@ -258,7 +265,7 @@ class ConfigurationManager(LoadableSingleton):
         return config_copy
 
     def get_ai_models_training_config(self) -> AIModelsTrainingConfig:
-        with self.load_guard(ex=ConfigurationNotLoaded("cannot retrieve AI model training configs")):
+        with self.load_guard():
             return self._ai_models_config
 
 

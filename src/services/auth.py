@@ -11,7 +11,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 from src.common.auth import TokenAuthService
 from src.common.config import InjectedTokenConfig, AuthConfig, ConfigurationManager
 from src.common.exceptions.auth import AuthenticationServiceNotLoadedException, UnknownAuthenticationService
-from src.common.utils import Singleton, LoadableSingleton
+from src.common.utils import LoadableSingleton
 from src.models.user import UserOutModel, User
 from src.services.database import InjectedSession
 
@@ -57,8 +57,12 @@ class TokenAuthManager(LoadableSingleton):
     def _loaded(self) -> bool:
         return self._config is not None and self._service is not None
 
+    @property
+    def _not_loaded_exception(self) -> Exception:
+        return AuthenticationServiceNotLoadedException()
+
     def get_service(self, session: Session, config: AuthConfig.TokenConfig) -> TokenAuthService:
-        with self.load_guard(ex=AuthenticationServiceNotLoadedException()):
+        with self.load_guard():
             return self._service(session, config)
 
     def generate_token(self, user: User, session: Session, config: AuthConfig.TokenConfig):

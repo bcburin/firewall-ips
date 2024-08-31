@@ -10,6 +10,8 @@ from threading import Lock
 from typing import Callable
 import inspect
 
+from src.common.exceptions.persistence import NotLoadedException
+
 
 def create_dir_if_not_exists(f: Callable[..., Path]) -> Callable[..., Path]:
     def inner(*args, **kwargs) -> Path:
@@ -92,11 +94,17 @@ class LoadableSingleton(metaclass=Singleton):
     def __init__(self):
         self.load_lock = Lock()
 
+    @abstractmethod
     def _load(self):
         raise NotImplemented()
 
+    @abstractmethod
     def _loaded(self):
         raise NotImplemented()
+
+    @property
+    def _not_loaded_exception(self) -> Exception:
+        return NotLoadedException()
 
     def load(self):
         with self.load_lock:
@@ -111,12 +119,12 @@ class LoadableSingleton(metaclass=Singleton):
             return self._loaded()
 
     @contextmanager
-    def load_guard(self, ex: Exception):
+    def load_guard(self):
         with self.load_lock:
             if not self._loaded():
                 self._load()
                 if not self._loaded():
-                    raise ex
+                    raise self._not_loaded_exception
         yield
 
 
@@ -136,12 +144,17 @@ class ZipCompressionTool(CompressionTool):
     @staticmethod
     def compress(filepath: Path):
         with zipfile.ZipFile(str(filepath) + '.zip', 'w') as zip_file:
-            zip_file.write(filepath)
+            zip_file.write(filepath, arcname=filepath.name)
 
     @staticmethod
     def decompress(compressed_filepath: Path, output_filepath: Path) -> None:
         with zipfile.ZipFile(compressed_filepath, 'r') as zip_file:
-            zip_file.extractall(output_filepath)
+            # Extract the only file in the zip file to a temporary directory
+            temp_dir = output_filepath.parent
+            zip_file.extractall(path=temp_dir)
+            # Move the extracted file to the specified output filepath
+            extracted_file = temp_dir / zip_file.namelist()[0]
+            extracted_file.rename(output_filepath)
 
 
 class GzipCompressionTool(CompressionTool):

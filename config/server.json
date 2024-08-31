@@ -20,13 +20,12 @@
             }
         },
         "persistence": {
-            "enable": true,
-            "directory": "$root/archive",
+            "directory": "$root/repository",
             "maxSavedModels": 3,
+            "loadLatestOnStart": true,
             "compression": {
                 "enable": true,
-                "tool": "zip",
-                "compressLatestModel": false
+                "tool": "zip"
             }
         }
     },
