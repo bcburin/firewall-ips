@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.common.config import EmailNotificationConfig, NotificationConfig, ConfigurationManager
 from src.common.notification import NotifiableObjectType, NotifiableObject
-from src.common.utils import LoadableSingleton
+from src.common.singleton import LoadableSingleton
 from src.models.enums import Action
 from src.models.firewall_rule import FirewallRuleOutModel
 

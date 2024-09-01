@@ -6,7 +6,7 @@ from typing import Generic, Iterable, Type
 from src.common.config import CompressionToolOption, PersistenceConfig, ConfigurationManager
 from src.common.exceptions.persistence import UnexpectedPersistableObjectTypeException
 from src.common.persistence import PersistableObject, PersistableObjectType
-from src.common.utils import LoadableSingleton
+from src.common.singleton import LoadableSingleton
 
 
 class VersionedObjectManager(Generic[PersistableObjectType], LoadableSingleton):

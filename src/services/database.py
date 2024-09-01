@@ -5,7 +5,7 @@ from sqlmodel import create_engine, Session, SQLModel
 
 from src.common.config import ConfigurationManager, DbConfig
 from src.common.exceptions.db import DbManagerNotLoadedException
-from src.common.utils import LoadableSingleton
+from src.common.singleton import LoadableSingleton
 
 
 class DBSessionManager(LoadableSingleton):

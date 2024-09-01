@@ -11,8 +11,8 @@ from pydantic import BaseModel, TypeAdapter, Field
 
 from src.common.exceptions.config import ConfigurationNotLoaded
 from src.common.utils import get_config_dir, convert_dict_keys_camel_to_snake, \
-    resolve_variables_in_path, create_dir_if_not_exists, CompressionTool, ZipCompressionTool, GzipCompressionTool, \
-    LoadableSingleton
+    resolve_variables_in_path, create_dir_if_not_exists, CompressionTool, ZipCompressionTool, GzipCompressionTool
+from src.common.singleton import LoadableSingleton
 
 
 class CompressionToolOption(str, Enum):

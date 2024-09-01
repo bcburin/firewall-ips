@@ -11,7 +11,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 from src.common.auth import TokenAuthService
 from src.common.config import InjectedTokenConfig, AuthConfig, ConfigurationManager
 from src.common.exceptions.auth import AuthenticationServiceNotLoadedException, UnknownAuthenticationService
-from src.common.utils import LoadableSingleton
+from src.common.singleton import LoadableSingleton
 from src.models.user import UserOutModel, User
 from src.services.database import InjectedSession
 
