@@ -2,6 +2,7 @@ from fastapi import APIRouter, Query
 
 from src.common.exceptions.db import NotFoundDbException
 from src.models.firewall_rule import FirewallRule, FirewallRuleOutModel, GetAllFirewallRules
+from src.services.auth import UserLoggedIn
 from src.services.database import InjectedSession
 
 router = APIRouter(prefix='/firewall-rules', tags=['Firewall Rules'])
@@ -9,7 +10,7 @@ router = APIRouter(prefix='/firewall-rules', tags=['Firewall Rules'])
 ENTITY = 'firewall rule'
 
 
-@router.get('/', response_model=GetAllFirewallRules)
+@router.get('/', response_model=GetAllFirewallRules, dependencies=[UserLoggedIn])
 def get_all(
         session: InjectedSession,
         page: int = Query(default=0, ge=0),
@@ -21,7 +22,7 @@ def get_all(
     return GetAllFirewallRules(data=fwrs, total=total_rows)
 
 
-@router.get('/{id}', response_model=FirewallRuleOutModel)
+@router.get('/{id}', response_model=FirewallRuleOutModel, dependencies=[UserLoggedIn])
 def get_by_id(id: int, session: InjectedSession):
     fwr = session.query.get(id)
     if fwr is None:

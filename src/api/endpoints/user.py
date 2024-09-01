@@ -8,7 +8,7 @@ from src.common.exceptions.auth import AuthException
 from src.common.exceptions.db import NotFoundDbException, NoUpdatesProvidedDbException
 from src.common.exceptions.model import DeletionOfActiveUserException
 from src.models.user import UserOutModel, UserCreateModel, UserUpdateModel, User, GetAllUsers
-from src.services.auth import TokenAuthManager, InjectedCurrentUser
+from src.services.auth import TokenAuthManager, InjectedCurrentUser, UserLoggedIn
 from src.services.database import InjectedSession
 
 router = APIRouter(prefix='/users', tags=['Users'])
@@ -24,7 +24,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
-@router.get('/', response_model=GetAllUsers)
+@router.get('/', response_model=GetAllUsers, dependencies=[UserLoggedIn])
 def get_all(
         session: InjectedSession,
         page: int = Query(default=0, ge=0),
@@ -42,7 +42,7 @@ def get_user_me(current_user: InjectedCurrentUser):
     return current_user
 
 
-@router.get('/{id}', response_model=UserOutModel)
+@router.get('/{id}', response_model=UserOutModel, dependencies=[UserLoggedIn])
 def get_one(id: int, session: InjectedSession):
     user = session.query.get(id)
     if user is None:
@@ -50,12 +50,12 @@ def get_one(id: int, session: InjectedSession):
     return user
 
 
-@router.post('/', response_model=UserOutModel)
+@router.post('/', response_model=UserOutModel, dependencies=[UserLoggedIn])
 def create(item: UserCreateModel, session: InjectedSession):
     return User.create_from(item).save(session)
 
 
-@router.put('/{id}', response_model=UserOutModel)
+@router.put('/{id}', response_model=UserOutModel, dependencies=[UserLoggedIn])
 def update(id: int, item: UserUpdateModel, session: InjectedSession):
     if not item.has_updates():
         raise NoUpdatesProvidedDbException(ENTITY)
@@ -65,7 +65,7 @@ def update(id: int, item: UserUpdateModel, session: InjectedSession):
     return user.update_from(update_model=item).update(session)
 
 
-@router.put('/{id}/toggle', response_model=UserOutModel)
+@router.put('/{id}/toggle', response_model=UserOutModel, dependencies=[UserLoggedIn])
 def toggle_active(id: int, session: InjectedSession):
     user: User = session.query(User).get(id)
     if user is None:
@@ -76,7 +76,7 @@ def toggle_active(id: int, session: InjectedSession):
     return user.update(session)
 
 
-@router.delete('/{id}', response_model=bool)
+@router.delete('/{id}', response_model=bool, dependencies=[UserLoggedIn])
 def delete_one(id: int, session: InjectedSession):
     user = session.query(User).get(id)
     if user is None:

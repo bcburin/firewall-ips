@@ -10,7 +10,8 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from src.common.auth import TokenAuthService
 from src.common.config import InjectedTokenConfig, AuthConfig, ConfigurationManager
-from src.common.exceptions.auth import AuthenticationServiceNotLoadedException, UnknownAuthenticationService
+from src.common.exceptions.auth import AuthenticationServiceNotLoadedException, UnknownAuthenticationService, \
+    AuthException
 from src.common.singleton import LoadableSingleton
 from src.models.user import UserOutModel, User
 from src.services.database import InjectedSession
@@ -85,3 +86,12 @@ def get_current_user(
 
 
 InjectedCurrentUser = Annotated[UserOutModel, Depends(get_current_user)]
+
+
+def user_is_logged_in_dependency(current_user: InjectedCurrentUser):
+    if not current_user:
+        raise AuthException('Not Authenticated')
+    return current_user
+
+
+UserLoggedIn = Depends(user_is_logged_in_dependency)

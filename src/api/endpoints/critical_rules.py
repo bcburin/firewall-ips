@@ -3,6 +3,7 @@ from fastapi import APIRouter, Query
 from src.common.exceptions.db import NotFoundDbException, NoUpdatesProvidedDbException
 from src.models.critical_rule import CriticalRuleCreateModel, CriticalRuleUpdateModel, \
     CriticalRuleOutModel, CriticalRule, GetAllCriticalRules
+from src.services.auth import UserLoggedIn
 from src.services.database import InjectedSession
 
 router = APIRouter(prefix='/critical-rules', tags=['Critical Rules'])
@@ -10,7 +11,7 @@ router = APIRouter(prefix='/critical-rules', tags=['Critical Rules'])
 ENTITY = 'critical rule'
 
 
-@router.get('/', response_model=GetAllCriticalRules)
+@router.get('/', response_model=GetAllCriticalRules, dependencies=[UserLoggedIn])
 def get_all(
         session: InjectedSession,
         page: int = Query(default=0, ge=0),
@@ -22,7 +23,7 @@ def get_all(
     return GetAllCriticalRules(total=total_rows, data=crs)
 
 
-@router.get('/{id}', response_model=CriticalRuleOutModel)
+@router.get('/{id}', response_model=CriticalRuleOutModel, dependencies=[UserLoggedIn])
 def get_one(id: int, session: InjectedSession):
     cr = session.query.get(id)
     if cr is None:
@@ -30,12 +31,12 @@ def get_one(id: int, session: InjectedSession):
     return cr
 
 
-@router.post('/', response_model=CriticalRuleOutModel)
+@router.post('/', response_model=CriticalRuleOutModel, dependencies=[UserLoggedIn])
 def create(item: CriticalRuleCreateModel, session: InjectedSession):
     return CriticalRule.create_from(create_model=item).save(session)
 
 
-@router.put('/{id}', response_model=CriticalRuleOutModel)
+@router.put('/{id}', response_model=CriticalRuleOutModel, dependencies=[UserLoggedIn])
 def update(id: int, item: CriticalRuleUpdateModel, session: InjectedSession):
     if not item.has_updates():
         raise NoUpdatesProvidedDbException(ENTITY)
@@ -45,7 +46,7 @@ def update(id: int, item: CriticalRuleUpdateModel, session: InjectedSession):
     return cr.update_from(update_model=item).update(session)
 
 
-@router.delete('/{id}', response_model=bool)
+@router.delete('/{id}', response_model=bool, dependencies=[UserLoggedIn])
 def delete_one(id: int, session: InjectedSession):
     user = session.query(CriticalRule).get(id)
     if user is None:
@@ -54,7 +55,7 @@ def delete_one(id: int, session: InjectedSession):
     return True
 
 
-@router.delete('/', response_model=bool)
+@router.delete('/', response_model=bool, dependencies=[UserLoggedIn])
 def delete_multiple(ids: list[int], session: InjectedSession):
     session.execute(CriticalRule.__table__.delete().where(CriticalRule.id.in_(ids)))
     session.commit()

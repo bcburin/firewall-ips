@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from src.models.critical_rule import CriticalRule
 from src.models.firewall_rule import FirewallRule
 from src.models.user import User
+from src.services.auth import UserLoggedIn
 from src.services.database import InjectedSession
 
 router = APIRouter(prefix='/dev', tags=['Development'])
@@ -15,7 +16,7 @@ class MockConfig(BaseModel):
     n_firewall_rules: int | None = None
 
 
-@router.post('/mock', response_model=bool)
+@router.post('/mock', response_model=bool, dependencies=[UserLoggedIn])
 def mock_data(config: MockConfig, session: InjectedSession):
     success = True
     if config.n_users is not None:
