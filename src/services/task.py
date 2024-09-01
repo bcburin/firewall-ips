@@ -1,8 +1,12 @@
+from __future__ import annotations
+
+import asyncio
 import logging
-from asyncio import Task
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from threading import Timer
 from time import time
-from typing import Callable
+from typing import Callable, Any
 
 from croniter import croniter
 
@@ -33,41 +37,44 @@ class PeriodicTask:
         self._timer.start()
 
     def run(self, run_first_time: bool = True):
-        """
-        Run periodic task. The task function will be executed whenever the current time matches the cron string
-        of the task. If the task is already running, nothing is done.
-
-        Args:
-            run_first_time:  whether the task should be run a first time, regardless of the con string (True by default)
-        """
         if self.is_running:
             return
         self._run(first_time=True, run_first_time=run_first_time)
 
     def stop(self):
-        """
-        Stops periodic task if it is running.
-        """
         if self.is_running:
             self._timer.cancel()
             self._timer = None
 
     @property
     def is_running(self) -> bool:
-        """
-        Indicates whether the periodic task is running.
-        """
         return self._timer is not None
 
 
-class PeriodicTaskManager(metaclass=Singleton):
+class TaskManager(metaclass=Singleton):
 
     def __init__(self):
-        self._startup_tasks: dict[str, Task] = {}
+        self._startup_tasks: dict[str, tuple[Callable, tuple, dict]] = {}
         self._periodic_tasks: dict[str, PeriodicTask] = {}
+        self._synchronous_tasks: dict[str, tuple[Callable, tuple, dict]] = {}
+        self._asynchronous_tasks: dict[str, tuple[Callable, tuple, dict]] = {}
+        self._executor = ThreadPoolExecutor()  # Thread pool for running tasks
 
-    def add_periodic_task(self, name: str, task: PeriodicTask):
+    def add_periodic_task(self, task: PeriodicTask, name: str) -> TaskManager:
         self._periodic_tasks[name] = task
+        return self
+
+    def add_startup_task(self, task: Callable, name: str, *args, **kwargs) -> TaskManager:
+        self._startup_tasks[name] = (task, args, kwargs)
+        return self
+
+    def add_synchronous_task(self, task: Callable, name: str, *args: Any, **kwargs: Any) -> TaskManager:
+        self._synchronous_tasks[name] = (task, args, kwargs)
+        return self
+
+    def add_asynchronous_task(self, task: Callable, name: str, *args: Any, **kwargs: Any) -> TaskManager:
+        self._asynchronous_tasks[name] = (task, args, kwargs)
+        return self
 
     def run_periodic_tasks(self):
         for name, task in self._periodic_tasks.items():
@@ -75,16 +82,35 @@ class PeriodicTaskManager(metaclass=Singleton):
                          f"(cron string: \"{task.cron_string}\")")
             task.run()
 
+    def run_startup_tasks(self):
+        for name, (task, args, kwargs) in self._startup_tasks.items():
+            logging.info(f"[{self.__class__.__name__}] running startup task {name}")
+            task(*args, **kwargs)
 
-if __name__ == '__main__':
-    from time import sleep
+    def _run_synchronous_tasks(self):
+        for name, (task, args, kwargs) in self._synchronous_tasks.items():
+            logging.info(f"[{self.__class__.__name__}] running synchronous task {name}")
+            task(*args, **kwargs)
 
-    def greet(name: str):
-        print(f'Hello, {name}!')
+    async def _run_asynchronous_tasks(self):
+        loop = asyncio.get_event_loop()
+        tasks = []
+        for name, (task, args, kwargs) in self._asynchronous_tasks.items():
+            logging.info(f"[{self.__class__.__name__}] running asynchronous task {name}")
+            # Run each task in the executor
+            tasks.append(loop.run_in_executor(self._executor, partial(task, *args, **kwargs)))
+        await asyncio.gather(*tasks)
 
-    ptask = PeriodicTask(cron_string='* * * * *', task=greet, name='John')
-    ptask.run(run_first_time=True)
-    sleep(130)
-    ptask.stop()
-
-
+    def run_all_tasks(self):
+        # First, run all startup tasks synchronously
+        self.run_startup_tasks()
+        # Run synchronous tasks in the thread pool
+        self._executor.submit(self._run_synchronous_tasks)
+        # Run asynchronous tasks in the thread pool using asyncio
+        asyncio.run(self._run_asynchronous_tasks())
+        # Empty lists of non-periodic tasks
+        self._startup_tasks.clear()
+        self._synchronous_tasks.clear()
+        self._asynchronous_tasks.clear()
+        # run periodic tasks
+        self.run_periodic_tasks()
