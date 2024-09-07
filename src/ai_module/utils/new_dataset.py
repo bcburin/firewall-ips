@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Iterable
+
 import pandas as pd
 import numpy as np
 import os
@@ -7,31 +10,38 @@ from collections import Counter
 from scipy import stats
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import class_weight
+from sqlalchemy.testing.plugin.plugin_base import logging
 
-def prepare_data(df: pd.DataFrame, config : dict, n_class : int = 2, k : int = 5000000) -> pd.DataFrame:
+from src.common.config import ConfigurationManager, DatasetConfig, ColumnType
+
+
+def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
+    config = ConfigurationManager().get_dataset_config()
     df = fix_data_type(df, config)
     df = drop_infinate_null(df)
     df = generate_multi_label(df, config)
     df = drop_unnecessary_column(df)
-    df = stratified_sample(df, k, n_class)
+    df = stratified_sample(df, config.sample_size, config.num_classes)
     return df
 
-def read_data(folder_path: str, config: dict) -> pd.DataFrame:
-    num_class = config['num_class']
+
+def read_and_prepare_data(data_path: Path) -> pd.DataFrame:
     warnings.filterwarnings("ignore")
     final_data: pd.DataFrame = pd.DataFrame()
-    for filename in os.listdir(folder_path):
-        print(f"Iniciando a leitura do arquivo {filename}")
-        file_path = os.path.join(folder_path, filename)
-        if os.path.isfile(file_path):
+    if data_path.is_dir():
+        for file_path in data_path.iterdir():
+            logging.info(f"Reading file at {file_path}")
+            if not file_path.is_file():
+                continue
             data = pd.read_csv(file_path, low_memory=False)
-            data = prepare_data(data, config, num_class)
+            data = prepare_data(data)
             if len(final_data) == 0:
                 final_data = data
             else:
                 final_data = pd.concat([final_data, data], ignore_index=True)
-
-    final_data  = filter_outliers_zscore(final_data, num_class)
+    else:
+        data = pd.read_csv(data_path, low_memory=False)
+        final_data = prepare_data(data)
     return final_data
 
 
@@ -46,60 +56,68 @@ def stratified_sample(df: pd.DataFrame, k: int, n_classes: int) -> pd.DataFrame:
         df_sampled = pd.concat([df_sampled, df_aux])
     return df_sampled
 
+
 def drop_infinate_null(df: pd.DataFrame) -> pd.DataFrame:
     df = df.replace(["Infinity", "infinity"], np.inf)
     df = df.replace([np.inf, -np.inf], np.nan)
     df.dropna(inplace=True)
     return df
 
+
 def drop_unnecessary_column(df: pd.DataFrame) -> pd.DataFrame:
     df.drop(columns="Timestamp", inplace=True)
     return df
+
 
 def generate_binary_label(df: pd.DataFrame) -> pd.DataFrame:
     df["Label"] = df['Label'].apply(lambda x: 0 if x == 'Benign' else 1)
     return df
 
-def generate_multi_label(df: pd.DataFrame, config : dict) -> pd.DataFrame:
-    mapping = config['mapping']
+
+def generate_multi_label(df: pd.DataFrame, config: DatasetConfig) -> pd.DataFrame:
+    mapping = { mapping.label: mapping.value for mapping in config.mapping }
     df['Label'] = df['Label'].map(mapping) 
     return df
 
-def fix_data_type(df: pd.DataFrame, config : dict) -> pd.DataFrame:
-    columns = config['columns']
+
+def fix_data_type(df: pd.DataFrame, config : DatasetConfig) -> pd.DataFrame:
+    columns = config.columns
     for col in columns:
-        col_name = col["name"]
-        col_type = col["type"]
-        if col_type == "float":
+        col_name = col.name
+        col_type = col.type
+        if col_type == ColumnType.FLOAT:
             df[col_name] = pd.to_numeric(df[col_name], errors='coerce')
-        elif col_type == "int":
+        elif col_type == ColumnType.INT:
             df[col_name] = pd.to_numeric(df[col_name], errors='coerce', downcast='integer')
     return df
-def drop_constant_col(df: pd.DataFrame, config : dict) -> pd.DataFrame:
-    exclude_columns = config['rule_variables']
-    variances = df.var(numeric_only=True)
-    constant_columns = variances[variances == 0].index
-    columns_to_drop = [col for col in constant_columns if col not in exclude_columns]
+
+
+def remove_columns(df: pd.DataFrame, col_names: Iterable[str]):
+    not_excluded_columns = ConfigurationManager().get_dataset_config().columns_not_to_remove
+    columns_to_drop = [col for col in col_names if col not in not_excluded_columns]
     df = df.drop(columns_to_drop, axis=1)
     return df
 
-def drop_duplicates(df: pd.DataFrame, config : dict) -> pd.DataFrame:
-    exclude_columns = config['rule_variables']
+
+def drop_constant_col(df: pd.DataFrame) -> pd.DataFrame:
+    variances = df.var(numeric_only=True)
+    constant_columns = variances[variances == 0].index
+    return remove_columns(df, constant_columns)
+
+
+def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     duplicates = set()
     for i in range(0, len(df.columns)):
         col1 = df.columns[i]
         for j in range(i+1, len(df.columns)):
             col2 = df.columns[j]
-            if(df[col1].equals(df[col2])):
+            if df[col1].equals(df[col2]):
                 duplicates.add(col2)
+    logging.info(f"Duplicate columns: {duplicates}")
+    return remove_columns(df, duplicates)
 
-    print (f"As colunas duplicadas são: {duplicates}")
-    columns_to_drop = [col for col in duplicates if col not in exclude_columns]
-    df = df.drop(columns_to_drop, axis=1)
-    return df
 
-def drop_correlated_col(df: pd.DataFrame, config: dict) -> pd.DataFrame:
-    exclude_columns = config['rule_variables']
+def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
     corr = df.corr(numeric_only=True)
     correlated_col = set()
     is_correlated = [True] * len(corr.columns)
@@ -111,16 +129,15 @@ def drop_correlated_col(df: pd.DataFrame, config: dict) -> pd.DataFrame:
                     colname = corr.columns[j]
                     is_correlated[j]=False
                     correlated_col.add(colname)
-    
-    columns_to_drop = [col for col in correlated_col if col not in exclude_columns]
-    df = df.drop(columns_to_drop, axis=1)
-    print (f"o tamanho do dataframe é {df.shape}")
-    return df
+    return remove_columns(df, correlated_col)
 
-def filter_outliers_zscore(data : pd.DataFrame, threshold: int) -> pd.DataFrame:
+
+def filter_outliers_zscore(data : pd.DataFrame) -> pd.DataFrame:
+    threshold = ConfigurationManager().get_dataset_config().num_classes
     z_scores = np.abs(stats.zscore(data))
     outlier_mask = (z_scores > threshold).any(axis=1)
     return data[~outlier_mask]
+
 
 def normalize(df: pd.DataFrame) -> pd.DataFrame:
     columns = [col for col in df.columns if col != 'Label']
@@ -128,21 +145,21 @@ def normalize(df: pd.DataFrame) -> pd.DataFrame:
     df[columns] = min_max_scaler.transform(df[columns])
     return df
 
+
 def select_col(df: pd.DataFrame, col: list[str]) -> pd.DataFrame:
     return df[col]
 
-def filter_col(df: pd.DataFrame, config : dict) -> pd.DataFrame:
-    df = drop_constant_col(df, config)
-    df = drop_duplicates(df, config)
-    df = drop_correlated_col(df, config)
+
+def filter_col(df: pd.DataFrame) -> pd.DataFrame:
+    df = drop_constant_col(df)
+    df = drop_duplicates(df)
+    df = drop_correlated_col(df)
     return df
+
 
 def calculate_weights(df: pd.DataFrame):
     order_label_list = np.unique(df['Label'])
-    class_weights = class_weight.compute_class_weight('balanced',
-                                                 classes=order_label_list,
-                                                 y=df['Label'].values)
-
-    class_weights = {k: v for k,v in enumerate(class_weights)}
-    print(class_weights)
+    class_weights = class_weight.compute_class_weight(
+        'balanced', classes=order_label_list, y=df['Label'].values)
+    class_weights = { k: v for k,v in enumerate(class_weights) }
     return class_weights
