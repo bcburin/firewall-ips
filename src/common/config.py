@@ -212,14 +212,44 @@ class NNConfig(BaseAIModelConfig):
 class AIModelsTrainingConfig(BaseConfig):
     __config__filename__ = 'models.json'
 
-    lightgbm: list[LightgbmConfig]
-    gradientboost: list[GradientBoostConfig]
-    logisticregression: list[LogisticRegressionConfig]
-    multilayerperceptron: list[MultiLayerPerceptronConfig]
-    randomforest: list[RandomForestConfig]
-    svm: list[SVMConfig]
-    knn: list[KNNConfig]
-    nn: list[NNConfig]
+    lightgbm: LightgbmConfig
+    gradientboost: GradientBoostConfig
+    logisticregression: LogisticRegressionConfig
+    multilayerperceptron: MultiLayerPerceptronConfig
+    randomforest: RandomForestConfig
+    svm: SVMConfig
+    knn: KNNConfig
+
+
+class ColumnType(str, Enum):
+    FLOAT = "float"
+    INT = "int"
+
+
+class DatasetConfig(BaseConfig):
+    __config__filename__ = "dataset.json"
+
+    class ColumnDescription(BaseModel):
+        name: str
+        type: ColumnType
+        must_include: bool = False
+
+    class MappingConfig(BaseModel):
+        label: str
+        value: int
+
+    columns: list[ColumnDescription]
+    mapping: list[MappingConfig]
+    protocol: list[str]
+    sample_size: int
+
+    @property
+    def num_classes(self) -> int:
+        return len(set([mapping.value for mapping in self.mapping]))
+
+    @property
+    def columns_not_to_remove(self) -> list[str]:
+        return [col.name for col in self.columns if col.must_include]
 
 
 class ConfigurationManager(LoadableSingleton):
@@ -227,14 +257,18 @@ class ConfigurationManager(LoadableSingleton):
     def __init__(self):
         self._server_config: ServerConfig | None = None
         self._ai_models_config: AIModelsTrainingConfig | None = None
+        self._dataset_config: DatasetConfig | None = None
         super().__init__()
 
     def _load(self):
         self._server_config = ServerConfig.read_file()
         self._ai_models_config = AIModelsTrainingConfig.read_file()
+        self._dataset_config = DatasetConfig.read_file()
 
     def _loaded(self) -> bool:
-        return self._server_config is not None and self._ai_models_config is not None
+        return (self._server_config is not None and
+                self._ai_models_config is not None and
+                self._dataset_config is not None)
 
     @property
     def _not_loaded_exception(self) -> Exception:
@@ -267,6 +301,10 @@ class ConfigurationManager(LoadableSingleton):
     def get_ai_models_training_config(self) -> AIModelsTrainingConfig:
         with self.load_guard():
             return self._ai_models_config
+
+    def get_dataset_config(self) -> DatasetConfig:
+        with self.load_guard():
+            return self._dataset_config
 
 
 configuration_manager = ConfigurationManager()

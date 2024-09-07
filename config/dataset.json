@@ -18,11 +18,13 @@
         },
         {
             "name": "Flow Byts/s",
-            "type": "float"
+            "type": "float",
+            "mustInclude": true
         },
         {
             "name": "Flow Pkts/s",
-            "type": "float"
+            "type": "float",
+            "mustInclude": true
         },
         {
             "name": "Flow IAT Mean",
@@ -98,11 +100,13 @@
         },
         {
             "name": "Dst Port",
-            "type": "int"
+            "type": "int",
+            "mustInclude": true
         },
         {
             "name": "Protocol",
-            "type": "int"
+            "type": "int",
+            "mustInclude": true
         },
         {
             "name": "Flow Duration",
@@ -110,11 +114,13 @@
         },
         {
             "name": "Tot Fwd Pkts",
-            "type": "int"
+            "type": "int",
+            "mustInclude": true
         },
         {
             "name": "Tot Bwd Pkts",
-            "type": "int"
+            "type": "int",
+            "mustInclude": true
         },
         {
             "name": "TotLen Fwd Pkts",
@@ -313,24 +319,72 @@
             "type": "int"
         }
     ],
-    "mapping": {
-        "SSH-Bruteforce": 1,
-        "FTP-BruteForce": 1,
-        "Brute Force -XSS": 2,
-        "Brute Force -Web": 2,
-        "SQL Injection": 2,
-        "DoS attacks-Hulk": 3,
-        "DoS attacks-SlowHTTPTest": 3,
-        "DoS attacks-Slowloris": 3,
-        "DoS attacks-GoldenEye": 3,
-        "DDOS attack-HOIC": 4,
-        "DDOS attack-LOIC-UDP": 4,
-        "DDoS attacks-LOIC-HTTP": 4,
-        "Bot": 5,
-        "Infilteration": 6,
-        "Benign": 0,
-        "Label": 0
-    },
+    "mapping": [
+        {
+            "label": "SSH-Bruteforce",
+            "value": 1
+        },
+        {
+            "label": "FTP-BruteForce",
+            "value": 1
+        },
+        {
+            "label": "Brute Force -XSS",
+            "value": 2
+        },
+        {
+            "label": "Brute Force -Web",
+            "value": 2
+        },
+        {
+            "label": "SQL Injection",
+            "value": 2
+        },
+        {
+            "label": "DoS attacks-Hulk",
+            "value": 3
+        },
+        {
+            "label": "DoS attacks-SlowHTTPTest",
+            "value": 3
+        },
+        {
+            "label": "DoS attacks-Slowloris",
+            "value": 3
+        },
+        {
+            "label": "DoS attacks-GoldenEye",
+            "value": 3
+        },
+        {
+            "label": "DDOS attack-HOIC",
+            "value": 4
+        },
+        {
+            "label": "DDOS attack-LOIC-UDP",
+            "value": 4
+        },
+        {
+            "label": "DDoS attacks-LOIC-HTTP",
+            "value": 4
+        },
+        {
+            "label": "Bot",
+            "value": 5
+        },
+        {
+            "label": "Infilteration",
+            "value": 6
+        },
+        {
+            "label": "Benign",
+            "value": 0
+        },
+        {
+            "label": "Label",
+            "value": 0
+        }
+    ],
     "protocol": [
         "HOPOPT",
         "ICMP",
@@ -351,7 +405,5 @@
         "CHAOS",
         "UDP"
     ],
-    "num_class" : 7,
-    "rule_variables": ["Dst Port", "Protocol", "Flow Byts/s", "Flow Pkts/s", "Tot Fwd Pkts", "Tot Bwd Pkts"],
-    "rule_names" : ["dst_port", "protocol", "fl_byt_s", "fl_pkt_s", "tot_fw_pk", "tot_bw_pk", "action"]
+    "sampleSize": 5000000
 }
