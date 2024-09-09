@@ -17,6 +17,7 @@ class EnsembleModel(PersistableObject):
         self._ensemble_model: VotingClassifier | None = None
         self._lock = Lock()
         self._ensamble_is_trained: bool = False
+        self.columns: list[str]
 
     def _load(self, model_bytes: bytes) -> None:
         with self._lock:
@@ -34,6 +35,7 @@ class EnsembleModel(PersistableObject):
             x_train = df_training.drop('Label', axis=1)
             y_train = df_training['Label']
             self._ensemble_model.fit(x_train, y_train)
+            self.columns = df_training.columns.to_list()
             self._ensamble_is_trained = True
 
     def predict(self, row: Series):
