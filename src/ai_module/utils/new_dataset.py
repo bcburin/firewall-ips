@@ -30,7 +30,7 @@ def read_and_prepare_data(data_path: Path) -> pd.DataFrame:
     final_data: pd.DataFrame = pd.DataFrame()
     if data_path.is_dir():
         for file_path in data_path.iterdir():
-            logging.info(f"Reading file at {file_path}")
+            #logging.info(f"Reading file at {file_path}")
             if not file_path.is_file():
                 continue
             data = pd.read_csv(file_path, low_memory=False)
@@ -113,7 +113,7 @@ def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
             col2 = df.columns[j]
             if df[col1].equals(df[col2]):
                 duplicates.add(col2)
-    logging.info(f"Duplicate columns: {duplicates}")
+    #logging.info(f"Duplicate columns: {duplicates}")
     return remove_columns(df, duplicates)
 
 

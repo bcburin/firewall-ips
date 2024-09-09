@@ -30,7 +30,7 @@ def create_estimators(df: DataFrame):
     return estimators
 
 
-def select_best_estimator_from_hyperparams(estimator: BaseEstimator, param_grid: dict, df: pd.DataFrame) \
+def select_best_estimator_from_hyperparams(estimator: BaseEstimator, param_grid: dict, df: DataFrame) \
         -> BaseEstimator:
     x_train = df.drop('Label', axis=1)
     y_train = df['Label']
@@ -44,7 +44,12 @@ def create_ensamble(models_config: AIModelsTrainingConfig, df: DataFrame):
     estimators = create_estimators(df=df)
     models_config_dict = models_config.model_dump()
     estimators_tuple_list = []
+    #num_class = calculate_numclass(df)
     for name, estimator in estimators.items():
+        #model_config_dict = models_config_dict[name]
+        #if model_config_dict["use_num_class"]:
+            #model_config_dict["num_class"] = num_class
+        #del model_config_dict["use_num_class"]
         estimators_tuple_list.append((
             name,
             select_best_estimator_from_hyperparams(
