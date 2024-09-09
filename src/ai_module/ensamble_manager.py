@@ -42,7 +42,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 self._classification_report, self._confusion_matrix = ensemble.evaluate(df_test)
         return self._classification_report, self._confusion_matrix
 
-    def evaluate_package(self, df: pd.DataFrame, config : dict) -> list[FirewallRuleBaseModel]:
+    def create_static_rules(self, df: pd.DataFrame, config : dict) -> list[FirewallRuleBaseModel]:
         protocol_map = config['protocol']
         normalized_df = normalize(df.copy())
         set_rules = set()
