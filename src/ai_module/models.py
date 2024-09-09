@@ -10,7 +10,6 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-from src.ai_module.ai_model import PytorchAIModel, Firewall_NN
 from src.ai_module.utils.new_dataset import calculate_weights
 
 
@@ -23,8 +22,6 @@ def select_hyperparameter(model: BaseEstimator, param_grid: dict, df: pd.DataFra
 
 def create_estimator(df):
     weights = calculate_weights(df)
-    pytorch_model = Firewall_NN(df.shape[1] - 1)
-    nn_model = PytorchAIModel(pytorch_model)
     gbdt_model = GradientBoostingClassifier()
     lgbm_model = LGBMClassifier(class_weight=weights)
     lr_model = LogisticRegression(class_weight=weights)
@@ -32,14 +29,12 @@ def create_estimator(df):
     mlp_classifier = MLPClassifier()
     knn_model = KNeighborsClassifier()
     estimators = [('lightgbm',lgbm_model),('gradientboost',gbdt_model),('logisticregression',lr_model),('randomforest',rf_model),
-                  ('multilayerperceptron',mlp_classifier), ('knn',knn_model), ('nn',nn_model)]
+                  ('multilayerperceptron',mlp_classifier), ('knn',knn_model)]
     estimators = [('lightgbm',lgbm_model)]
     return estimators
 
 def create_models(df):
     weights = calculate_weights(df)
-    pytorch_model = Firewall_NN(df.shape[1] - 1)
-    nn_model = PytorchAIModel(pytorch_model)
     gbdt_model = GradientBoostingClassifier()
     lgbm_model = LGBMClassifier(class_weight=weights)
     lr_model = LogisticRegression(class_weight=weights)

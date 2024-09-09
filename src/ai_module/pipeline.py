@@ -41,18 +41,3 @@ def create_rules_pipeline(data_path: str, model_path: str, dataset_config_path: 
     print(rules)
     return rules
 
-
-def train_and_get_metrics_pipeline(data_path: str, model_path: str, dataset_config_path: str) -> None:
-    with open(dataset_config_path, 'r') as file:
-        config = json.load(file)
-    model_training_config = ConfigurationManager().get_ai_models_training_config()
-    df = read_and_prepare_data(data_path, config)
-    df = normalize(df)
-    df = filter_col(df, config)
-    train_df, test_df = train_test_split(df, test_size=0.95, random_state=2, shuffle=True)
-    estimator = create_models(df)
-    ai_module = EnsemManagbleer(estimator, model_training_config, train_df)
-    ai_module._ensemble_model = estimator
-    ai_module.train(train_df)
-    ai_module.evaluate(test_df)
-    ai_module.shap_metrics(train_df, test_df, "logisticregression")
