@@ -165,7 +165,7 @@ class ServerConfig(BaseConfig):
 
 
 class BaseAIModelConfig(BaseModel):
-    num_class: int
+    num_class: list[int]
 
 
 class LightgbmConfig(BaseAIModelConfig):
@@ -174,7 +174,7 @@ class LightgbmConfig(BaseAIModelConfig):
     n_estimators: list[int]
 
 
-class GradientBoostConfig(BaseAIModelConfig):
+class GradientBoostConfig(BaseModel):
     learning_rate: list[float]
     n_estimators: list[int]
     subsample: list[float]

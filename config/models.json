@@ -1,6 +1,6 @@
 {
    "lightgbm":{
-      "numClass":7,
+      "numClass":[7],
       "numLeaves":[
          10,
          30,
@@ -15,7 +15,6 @@
       ]
    },
    "gradientboost":{
-      "numClass":7,
       "learningRate":[
          0.1
       ],
@@ -33,13 +32,13 @@
       ]
    },
    "logisticregression":{
-      "numClass":7,
+      "numClass":[7],
       "penalty":[
          "l2"
       ]
    },
    "multilayerperceptron":{
-      "numClass":7,
+      "numClass":[7],
       "hiddenLayer":[
          100
       ],
@@ -55,7 +54,7 @@
       ]
    },
    "randomforest":{
-      "numClass":7,
+      "numClass":[7],
       "nEstimators":[
          10,
          30,
@@ -69,7 +68,7 @@
       ]
    },
    "svm":{
-      "numClass":7,
+      "numClass":[7],
       "kernel":[
          "rbf",
          "linear",
@@ -80,7 +79,7 @@
       ]
    },
    "knn":{
-      "numClass":7,
+      "numClass":[7],
       "nNeighbors":[
          5,
          10,
