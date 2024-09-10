@@ -4,7 +4,7 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-from threading import Timer
+from threading import Timer, Thread
 from time import time
 from typing import Callable, Any
 
@@ -15,10 +15,11 @@ from src.common.utils import Singleton
 
 class PeriodicTask:
 
-    def __init__(self, cron_string: str, task: Callable, *args, **kwargs):
+    def __init__(self, cron_string: str, task: Callable, run_on_start: bool, *args, **kwargs):
         self._task = task
         self._args = args
         self._kwargs = kwargs
+        self._run_on_start = run_on_start
         self._croniter = croniter(cron_string)
         self._timer = None
         self._con_str = cron_string
@@ -27,19 +28,22 @@ class PeriodicTask:
     def cron_string(self) -> str:
         return self._con_str
 
-    def _run(self, first_time: bool = False, run_first_time: bool = True):
-        if not first_time or run_first_time:
-            self._task(*self._args, **self._kwargs)
+    def _run(self, first_time: bool = False, executor: ThreadPoolExecutor | None = None):
+        if not first_time or self._run_on_start:
+            if executor is not None:
+                executor.submit(self._task, *self._args, **self._kwargs)
+            else:
+                Thread(target=self._task, args=self._args, kwargs=self._kwargs).start()
         now = time()
         time_next_exec = self._croniter.get_next(start_time=now)
         delay = max(0, time_next_exec - now)
         self._timer = Timer(delay, self._run)
         self._timer.start()
 
-    def run(self, run_first_time: bool = True):
+    def run(self, executor: ThreadPoolExecutor | None = None):
         if self.is_running:
             return
-        self._run(first_time=True, run_first_time=run_first_time)
+        self._run(first_time=True, executor=executor)
 
     def stop(self):
         if self.is_running:
@@ -80,7 +84,7 @@ class TaskManager(metaclass=Singleton):
         for name, task in self._periodic_tasks.items():
             logging.info(f"[{self.__class__.__name__}] starting periodic task {name} "
                          f"(cron string: \"{task.cron_string}\")")
-            task.run()
+            task.run(executor=self._executor)
 
     def run_startup_tasks(self):
         for name, (task, args, kwargs) in self._startup_tasks.items():
