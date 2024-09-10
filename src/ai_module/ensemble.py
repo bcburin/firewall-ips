@@ -17,17 +17,21 @@ class EnsembleModel(PersistableObject):
         self._ensemble_model: VotingClassifier | None = None
         self._lock = Lock()
         self._ensamble_is_trained: bool = False
-        self.columns: list[str]
+        self._columns: list[str] | None = None
+
+    @property
+    def columns(self) -> list[str] | None:
+        return self._columns
 
     def _load(self, model_bytes: bytes) -> None:
         with self._lock:
-            self._ensemble_model, self.columns = pickle.loads(model_bytes)
+            self._ensemble_model, self._columns = pickle.loads(model_bytes)
 
     def _dump(self) -> bytes:
         with self._lock:
             if self._ensemble_model is None:
                 raise RuntimeError()
-            return pickle.dumps([self._ensemble_model, self.columns])
+            return pickle.dumps([self._ensemble_model, self._columns])
 
     def train(self, df_training: DataFrame):
         with self._lock:
@@ -35,7 +39,7 @@ class EnsembleModel(PersistableObject):
             x_train = df_training.drop('Label', axis=1)
             y_train = df_training['Label']
             self._ensemble_model.fit(x_train, y_train)
-            self.columns = df_training.columns.to_list()
+            self._columns = df_training.columns.to_list()
             self._ensamble_is_trained = True
 
     def predict(self, row: Series):
