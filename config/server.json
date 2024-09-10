@@ -32,6 +32,7 @@
     "notification": {
         "enable": true,
         "maxQueueSize": 128,
+        "cronString": "* * * * *",
         "methods": {
             "email": {
                 "subject": "Pacotes suspeitos: regras de firewall criadas [{n}]",

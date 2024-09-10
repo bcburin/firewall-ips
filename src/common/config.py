@@ -109,6 +109,7 @@ class NotificationConfig(BaseModel):
 
     enable: bool = True
     max_queue_size: int = 128
+    cron_string: str
     methods: MethodsConfig
 
     def has_any_method(self):
