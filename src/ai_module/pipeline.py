@@ -1,5 +1,6 @@
 import json
 
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from src.ai_module.utils.new_dataset import read_and_prepare_data, select_col, normalize, filter_col, \
@@ -26,18 +27,18 @@ def train_pipeline():
     em.evaluate_loaded_ensemble(df_test=test_df)
 
 
-def create_rules_pipeline(data_path: str, model_path: str, dataset_config_path: str) -> list[CriticalRuleBaseModel]:
-    with open(dataset_config_path, 'r') as file:
-        config = json.load(file)
-    model_training_config = ConfigurationManager().get_ai_models_training_config()
+def create_static_rules_pipeline():
+    server_config = ConfigurationManager().get_server_config()
+    data_path = server_config.ai_module.training.data.resolved_path
+    dataset_config = ConfigurationManager().get_database_config()
     df = read_and_prepare_data(data_path)
-    estimator = None
-    ai_module = EnsembleManager(estimator, model_training_config, df)
-    ai_module.change_model(model_path)
-    df = select_col(df, ai_module.columns)
+    em = EnsembleManager()
     if 'Label' in df.columns:
         df = df.drop(['Label'], axis=1)
-    rules = ai_module.evaluate_package(df, config)
-    print(rules)
-    return rules
+    em.create_static_rules(df, dataset_config)
 
+
+def create_dynamic_rules_pipeline(package: pd.Series):
+    dataset_config = ConfigurationManager().get_database_config()
+    em = EnsembleManager()
+    em.create_dynamic_rules(package, dataset_config)
