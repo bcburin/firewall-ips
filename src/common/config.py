@@ -32,6 +32,7 @@ class CompressionToolOption(str, Enum):
 
 class TrainingDataTypeOption(str, Enum):
     FILE = 'file'
+    DIRECTORY = 'directory'
 
 
 T = TypeVar('T', bound='BaseConfig')
