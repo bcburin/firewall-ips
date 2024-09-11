@@ -25,6 +25,7 @@ def train_pipeline():
     em = EnsembleManager()
     em.train_new_ensemble(df_training=train_df)
     em.evaluate_loaded_ensemble(df_test=test_df)
+    create_static_rules_pipeline()
 
 
 def create_static_rules_pipeline():

@@ -15,8 +15,16 @@
             "cronString": "* * * * *",
             "runOnStart": false,
             "data": {
-                "type": "file",
+                "type": "directory",
                 "path": "$root/data/final_data"
+            }
+        },
+        "staticRuleCreation": {
+            "cronString":"0 0 0 ? * SUN *",
+            "runOnStart": false,
+            "data": {
+                "type": "directory",
+                "path": "$root/data/rule_creationn"
             }
         },
         "persistence": {
