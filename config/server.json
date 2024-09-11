@@ -24,7 +24,7 @@
             "runOnStart": false,
             "data": {
                 "type": "directory",
-                "path": "$root/data/rule_creationn"
+                "path": "$root/data/rule_creation"
             }
         },
         "persistence": {

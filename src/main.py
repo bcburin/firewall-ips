@@ -1,7 +1,7 @@
 import uvicorn
 
 from src.ai_module.ensamble_manager import EnsembleManager
-from src.ai_module.pipeline import train_pipeline
+from src.ai_module.pipeline import create_static_rules_pipeline
 from src.api.api import api
 from src.common.config import ConfigurationManager, ServerConfig
 from src.models.user import User
@@ -19,6 +19,11 @@ def build_task_manager(config: ServerConfig) -> TaskManager:
         task=train_pipeline,
         run_on_start=config.ai_module.training.run_on_start,
     )
+    create_static_rules = PeriodicTask(
+        cron_string=config.ai_module.static_rule_creation.cron_string,
+        task=lambda: create_static_rules_pipeline(),
+        run_on_start=config.ai_module.static_rule_creation.run_on_start
+    )
     send_enqueued_fw_notifications = PeriodicTask(
         cron_string=config.notification.cron_string,
         task=lambda: FWRuleNotificationServiceManager().send_notifications(),
@@ -32,7 +37,8 @@ def build_task_manager(config: ServerConfig) -> TaskManager:
       .add_asynchronous_task(TokenAuthManager().load, name="LoadTokenAuthManager")\
       .add_asynchronous_task(EnsembleManager().load, name="LoadEnsembleManager")\
       .add_periodic_task(retraining_task, name="ModelRetrainingTask")\
-      .add_periodic_task(send_enqueued_fw_notifications, name="SendEnqueuedFWNotifications")
+      .add_periodic_task(send_enqueued_fw_notifications, name="SendEnqueuedFWNotifications")\
+      .add_periodic_task(create_static_rules, name="CreateStaticRules")
     return tm
 
 

@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
-from src.api.endpoints import critical_rules, firewall_rules, user, development
+from src.api.endpoints import critical_rules, firewall_rules, user, development, ensemble
 from src.common.exceptions.httpexc_provider import IHTTPExceptionProvider
 
 api = FastAPI(
@@ -15,6 +15,7 @@ api.include_router(user.router)
 api.include_router(critical_rules.router)
 api.include_router(firewall_rules.router)
 api.include_router(development.router)
+api.include_router(ensemble.router)
 
 
 @api.get('/')

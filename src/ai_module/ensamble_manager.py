@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from src.ai_module.ensemble import EnsembleModel
+from src.common.config import DatasetConfig
 from src.models.firewall_rule import FirewallRuleBaseModel
 from src.ai_module.utils.new_dataset import normalize
 from src.models.enums import Action
@@ -44,8 +45,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 self._classification_report, self._confusion_matrix = ensemble.evaluate(df_test)
         return self._classification_report, self._confusion_matrix
 
-    def create_static_rules(self, df: pd.DataFrame, config : dict):
-        protocol_map = config['protocol']
+    def create_static_rules(self, df: pd.DataFrame, config : DatasetConfig):
+        protocol_map = config.protocol
         ensemble = self.get_loaded_version()
         normalized_df = normalize(df.copy())
         set_rules = set()

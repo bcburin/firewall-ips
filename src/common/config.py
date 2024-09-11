@@ -119,8 +119,8 @@ class NotificationConfig(BaseModel):
 
 
 class AIModuleConfig(BaseModel):
-    class TrainingConfig(BaseModel):
-        class TrainingDataConfig(BaseModel):
+    class PeriodicDataReadingConfig(BaseModel):
+        class DataConfig(BaseModel):
             type: TrainingDataTypeOption = TrainingDataTypeOption.FILE
             path: str = '$data/log.xlsx'
 
@@ -131,9 +131,10 @@ class AIModuleConfig(BaseModel):
 
         cron_string: str
         run_on_start: bool = False
-        data: TrainingDataConfig
+        data: DataConfig
 
-    training: TrainingConfig
+    training: PeriodicDataReadingConfig
+    static_rule_creation: PeriodicDataReadingConfig
     persistence: PersistenceConfig
 
 

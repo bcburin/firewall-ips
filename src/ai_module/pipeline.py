@@ -1,14 +1,10 @@
-import json
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from src.ai_module.utils.new_dataset import read_and_prepare_data, select_col, normalize, filter_col, \
+from src.ai_module.utils.new_dataset import read_and_prepare_data, normalize, filter_col, \
     filter_outliers_zscore
 from src.ai_module.ensamble_manager import EnsembleManager
-from src.ai_module.models import create_estimator, create_models
 from src.common.config import ConfigurationManager
-from src.models.critical_rule import CriticalRuleBaseModel
 
 
 def train_pipeline():
@@ -31,7 +27,7 @@ def train_pipeline():
 def create_static_rules_pipeline():
     server_config = ConfigurationManager().get_server_config()
     data_path = server_config.ai_module.training.data.resolved_path
-    dataset_config = ConfigurationManager().get_database_config()
+    dataset_config = ConfigurationManager().get_dataset_config()
     df = read_and_prepare_data(data_path)
     em = EnsembleManager()
     if 'Label' in df.columns:
