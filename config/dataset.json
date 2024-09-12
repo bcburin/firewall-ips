@@ -405,5 +405,5 @@
         "CHAOS",
         "UDP"
     ],
-    "sampleSize": 5000000
+    "sampleSize": 50000
 }
