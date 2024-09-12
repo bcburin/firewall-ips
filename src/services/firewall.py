@@ -55,8 +55,6 @@ class IPTablesWriter(FirewallWriter):
             rule_str += "-j ACCEPT"
         elif rule.action == Action.BLOCK:
             rule_str += "-j REJECT"
-        elif rule.action == Action.DROP:
-            rule_str += "-j DROP"
         return rule_str.strip()
 
     @classmethod
@@ -145,8 +143,6 @@ class IPTablesWriter(FirewallWriter):
     def _translate_action(action_str) -> Action:
         if action_str == "ACCEPT":
             return Action.ALLOW
-        if action_str == "DROP":
-            return Action.DROP
         if action_str == "REJECT":
             return Action.BLOCK
 
