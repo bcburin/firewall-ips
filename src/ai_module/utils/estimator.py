@@ -27,6 +27,9 @@ def create_estimators(df: DataFrame):
         'multilayerperceptron': mlp_classifier,
         'knn': knn_model
     }
+    estimators = {
+        'lightgbm': lgbm_model
+    }
     return estimators
 
 
@@ -47,9 +50,9 @@ def create_ensamble(models_config: AIModelsTrainingConfig, df: DataFrame):
     estimators_tuple_list = []
     for name, estimator in estimators.items():
         model_config_dict = models_config_dict[name]
-        if model_config_dict["use_num_class"]:
+        if model_config_dict["num_class"]:
             model_config_dict["num_class"] = num_class
-        del model_config_dict["use_num_class"]
+        del model_config_dict["num_class"]
         estimators_tuple_list.append((
             name,
             select_best_estimator_from_hyperparams(
