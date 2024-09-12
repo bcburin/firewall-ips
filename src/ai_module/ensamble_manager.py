@@ -12,6 +12,9 @@ from src.models.firewall_rule import FirewallRuleBaseModel
 from src.ai_module.utils.new_dataset import normalize
 from src.models.enums import Action
 from src.services.persistence import VersionedObjectManager
+from src.models.critical_rule import CriticalRuleOutModel, CriticalRule, GetAllCriticalRules
+from src.services.database import InjectedSession
+from src.models.firewall_rule import FirewallRule, FirewallRuleOutModel, GetAllFirewallRules
 
 
 class EnsembleManager(VersionedObjectManager[EnsembleModel]):
@@ -44,6 +47,56 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 ensemble: EnsembleModel = self.get_loaded_version()
                 self._classification_report, self._confusion_matrix = ensemble.evaluate(df_test)
         return self._classification_report, self._confusion_matrix
+    
+    def check_critical_rule_collision(rule, protocol_map):
+        session: InjectedSession
+        dst_port=int(rule[0]),
+        protocol=protocol_map[int(rule[1])]
+        min_fl_byt_s=rule[2],
+        max_fl_byt_s=rule[2] * 1.05,
+        min_fl_pkt_s=rule[3] * 0.95,
+        max_fl_pkt_s=rule[3] * 1.05,
+        min_tot_fw_pk=int(rule[4] * 0.95),
+        max_tot_fw_pk=int(rule[4] * 1.05),
+        min_tot_bw_pk=int(rule[5] * 0.95),
+        max_tot_bw_pk=int(rule[5] * 1.05),
+        total_rows = session.query(CriticalRule).count()
+        crs: list[CriticalRuleOutModel] = (session.query(CriticalRule).order_by(CriticalRule.id)
+                                       .offset(0).limit(100).all())
+        critical_rules = GetAllCriticalRules(total=total_rows, data=crs)
+        for critical_rule in critical_rules:
+            if (dst_port == critical_rule.dst_port) or critical_rule.dst_port == None:
+                if (protocol == critical_rule.protocol) or critical_rule.protocol == None:
+                    if ((min_fl_byt_s > critical_rule.max_fl_byt_s) and max_fl_byt_s > min_fl_byt_s) or (min_fl_byt_s == None and max_fl_byt_s == None):
+                        if ((min_fl_pkt_s > critical_rule.max_fl_pkt_s) and max_fl_pkt_s > min_fl_pkt_s) or (min_fl_pkt_s == None and max_fl_pkt_s == None):
+                            if ((min_tot_fw_pk > critical_rule.max_tot_fw_pk) and max_tot_fw_pk > min_tot_fw_pk) or (min_tot_fw_pk == None and max_tot_fw_pk == None):
+                                if ((min_tot_bw_pk > critical_rule.max_tot_bw_pk) and max_tot_bw_pk > min_tot_bw_pk) or (min_tot_bw_pk == None and max_tot_bw_pk == None):
+                                    return True
+        return False
+    
+    def check_rule_collision(rule, protocol_map):
+        session: InjectedSession
+        dst_port=int(rule[0]),
+        protocol=protocol_map[int(rule[1])]
+        fl_byt_s=rule[2],
+        fl_pkt_s=rule[3] * 0.95,
+        tot_fw_pk=int(rule[4] * 0.95),
+        tot_bw_pk=int(rule[5] * 0.95),
+        total_rows = session.query(CriticalRule).count()
+        fwrs: list[FirewallRuleOutModel] = (session.query(FirewallRule).order_by(FirewallRule.id)
+                                       .offset(0).limit(1000).all())
+        GetAllFirewallRules(data=fwrs, total=total_rows)
+        firewall_rules = GetAllCriticalRules(total=total_rows, data=fwrs)
+        for firewall_rule in firewall_rules:
+            if (dst_port == firewall_rule.dst_port):
+                if (protocol == firewall_rule.protocol):
+                    if (abs(fl_byt_s - firewall_rule.max_fl_byt_s) - abs(fl_byt_s - firewall_rule.min_fl_byt_s)) < 0.2 * (firewall_rule.max_fl_byt_s - firewall_rule.min_fl_byt_s):
+                        if (abs(fl_pkt_s - firewall_rule.max_fl_pkt_s) - abs(fl_pkt_s - firewall_rule.min_fl_pkt_s)) < 0.2 * (firewall_rule.max_fl_pkt_s - firewall_rule.min_fl_pkt_s):
+                            if (abs(tot_fw_pk - firewall_rule.max_tot_fw_pk) - abs(tot_fw_pk - firewall_rule.min_tot_fw_pk)) < 0.2 * (firewall_rule.max_tot_fw_pk - firewall_rule.min_tot_fw_pk):
+                                if (abs(tot_bw_pk - firewall_rule.max_tot_bw_pk) - abs(tot_bw_pk - firewall_rule.min_tot_bw_pk)) < 0.2 * (firewall_rule.max_tot_bw_pk - firewall_rule.min_tot_bw_pk):
+                                        return True
+        return False
+
 
     def create_static_rules(self, df: pd.DataFrame, config : DatasetConfig):
         protocol_map = config.protocol
@@ -58,7 +111,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                     set_rules.add(tuple(original_row[config['rule_variables']].tolist()) + (Action.BLOCK,))
                 pbar.update(1)
         for rule in set_rules:
-            critical_rule_instance = FirewallRuleBaseModel(
+            static_rule = FirewallRuleBaseModel(
                 dst_port=int(rule[0]),
                 protocol=protocol_map[int(rule[1])],
                 min_fl_byt_s=rule[2] * 0.95,
@@ -71,7 +124,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 max_tot_bw_pk=int(rule[5] * 1.05),
                 action=rule[6]
             )
-            self.rules.append(critical_rule_instance)
+            if not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
+                self.rules.append(static_rule)
         
     def create_dynamic_rules(self, package: pd.Series, config):
         protocol_map = config['protocol']
@@ -80,7 +134,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         label = ensemble.predict(normalized_package.to_frame().T)
         if label != 0:
             rule = tuple(package[config['rule_variables']].tolist()) + (Action.BLOCK,)
-            critical_rule_instance = FirewallRuleBaseModel(
+            dynamic_rule = FirewallRuleBaseModel(
                 dst_port=int(rule[0]),
                 protocol=protocol_map[int(rule[1])],
                 min_fl_byt_s=rule[2] * 0.95,
@@ -93,6 +147,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 max_tot_bw_pk=int(rule[5] * 1.05),
                 action=rule[6]
             )
+        if not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
+            self.rules.append(dynamic_rule)
         
 
     
