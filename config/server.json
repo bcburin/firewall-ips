@@ -20,7 +20,7 @@
             }
         },
         "staticRuleCreation": {
-            "cronString":"0 0 0 ? * SUN *",
+            "cronString":"*/30 * * * *",
             "runOnStart": false,
             "data": {
                 "type": "directory",
