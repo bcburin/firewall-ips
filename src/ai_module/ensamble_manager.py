@@ -23,6 +23,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         self._classification_report: str | dict | None = None
         self._confusion_matrix: np.ndarray | None = None
         self.rules : list[FirewallRuleBaseModel] | None = None
+        self.logs : list[FirewallRuleBaseModel] | None = None
         super().__init__(cls=EnsembleModel)
 
     def _reset_cache(self):
@@ -146,23 +147,23 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         ensemble = self.get_loaded_version()
         normalized_package = normalize(package.copy())
         label = ensemble.predict(normalized_package.to_frame().T)
-        if label != 0:
-            rule = tuple(package[config['rule_variables']].tolist()) + (Action.BLOCK,)
-            dynamic_rule = FirewallRuleBaseModel(
-                dst_port=int(rule[0]),
-                protocol=protocol_map[int(rule[1])],
-                min_fl_byt_s=rule[2] * 0.95,
-                max_fl_byt_s=rule[2] * 1.05,
-                min_fl_pkt_s=rule[3] * 0.95,
-                max_fl_pkt_s=rule[3] * 1.05,
-                min_tot_fw_pk=int(rule[4] * 0.95),
-                max_tot_fw_pk=int(rule[4] * 1.05),
-                min_tot_bw_pk=int(rule[5] * 0.95),
-                max_tot_bw_pk=int(rule[5] * 1.05),
-                action=rule[6]
-            )
-        if not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
+        rule = tuple(package[config['rule_variables']].tolist()) + (Action.BLOCK,)
+        dynamic_rule = FirewallRuleBaseModel(
+            dst_port=int(rule[0]),
+            protocol=protocol_map[int(rule[1])],
+            min_fl_byt_s=rule[2] * 0.95,
+            max_fl_byt_s=rule[2] * 1.05,
+            min_fl_pkt_s=rule[3] * 0.95,
+            max_fl_pkt_s=rule[3] * 1.05,
+            min_tot_fw_pk=int(rule[4] * 0.95),
+            max_tot_fw_pk=int(rule[4] * 1.05),
+            min_tot_bw_pk=int(rule[5] * 0.95),
+            max_tot_bw_pk=int(rule[5] * 1.05),
+            action=rule[6]
+        )
+        if label != 0 and not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
             self.rules.append(dynamic_rule)
+        self.logs.append(dynamic_rule)
         
 
     
