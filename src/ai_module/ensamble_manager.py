@@ -64,15 +64,22 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         crs: list[CriticalRuleOutModel] = (session.query(CriticalRule).order_by(CriticalRule.id)
                                        .offset(0).limit(100).all())
         critical_rules = GetAllCriticalRules(total=total_rows, data=crs)
+        colision = False
         for critical_rule in critical_rules:
-            if (dst_port == critical_rule.dst_port) or critical_rule.dst_port == None:
-                if (protocol == critical_rule.protocol) or critical_rule.protocol == None:
-                    if ((min_fl_byt_s > critical_rule.max_fl_byt_s) and max_fl_byt_s > min_fl_byt_s) or (min_fl_byt_s == None and max_fl_byt_s == None):
-                        if ((min_fl_pkt_s > critical_rule.max_fl_pkt_s) and max_fl_pkt_s > min_fl_pkt_s) or (min_fl_pkt_s == None and max_fl_pkt_s == None):
-                            if ((min_tot_fw_pk > critical_rule.max_tot_fw_pk) and max_tot_fw_pk > min_tot_fw_pk) or (min_tot_fw_pk == None and max_tot_fw_pk == None):
-                                if ((min_tot_bw_pk > critical_rule.max_tot_bw_pk) and max_tot_bw_pk > min_tot_bw_pk) or (min_tot_bw_pk == None and max_tot_bw_pk == None):
-                                    return True
-        return False
+            if (dst_port != critical_rule.dst_port) and critical_rule.dst_port != None:
+                continue
+            if (protocol != critical_rule.protocol) and critical_rule.protocol != None:
+                continue
+            if not (((min_fl_byt_s > critical_rule.max_fl_byt_s) and (max_fl_byt_s > min_fl_byt_s)) or (min_fl_byt_s == None and max_fl_byt_s == None)):
+                continue
+            if not (((min_fl_pkt_s > critical_rule.max_fl_pkt_s) and max_fl_pkt_s > min_fl_pkt_s) or (min_fl_pkt_s == None and max_fl_pkt_s == None)):
+                continue
+            if not (((min_tot_fw_pk > critical_rule.max_tot_fw_pk) and max_tot_fw_pk > min_tot_fw_pk) or (min_tot_fw_pk == None and max_tot_fw_pk == None)):
+                continue
+            if not (((min_tot_bw_pk > critical_rule.max_tot_bw_pk) and max_tot_bw_pk > min_tot_bw_pk) or (min_tot_bw_pk == None and max_tot_bw_pk == None)):
+                continue
+            colision = True
+        return colision
     
     def check_rule_collision(rule, protocol_map):
         session: InjectedSession
@@ -87,15 +94,22 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                                        .offset(0).limit(1000).all())
         GetAllFirewallRules(data=fwrs, total=total_rows)
         firewall_rules = GetAllCriticalRules(total=total_rows, data=fwrs)
+        colision = False
         for firewall_rule in firewall_rules:
-            if (dst_port == firewall_rule.dst_port):
-                if (protocol == firewall_rule.protocol):
-                    if (abs(fl_byt_s - firewall_rule.max_fl_byt_s) - abs(fl_byt_s - firewall_rule.min_fl_byt_s)) < 0.2 * (firewall_rule.max_fl_byt_s - firewall_rule.min_fl_byt_s):
-                        if (abs(fl_pkt_s - firewall_rule.max_fl_pkt_s) - abs(fl_pkt_s - firewall_rule.min_fl_pkt_s)) < 0.2 * (firewall_rule.max_fl_pkt_s - firewall_rule.min_fl_pkt_s):
-                            if (abs(tot_fw_pk - firewall_rule.max_tot_fw_pk) - abs(tot_fw_pk - firewall_rule.min_tot_fw_pk)) < 0.2 * (firewall_rule.max_tot_fw_pk - firewall_rule.min_tot_fw_pk):
-                                if (abs(tot_bw_pk - firewall_rule.max_tot_bw_pk) - abs(tot_bw_pk - firewall_rule.min_tot_bw_pk)) < 0.2 * (firewall_rule.max_tot_bw_pk - firewall_rule.min_tot_bw_pk):
-                                        return True
-        return False
+            if not (dst_port == firewall_rule.dst_port):
+                continue
+            if not (protocol == firewall_rule.protocol):
+                continue
+            if not ((abs(fl_byt_s - firewall_rule.max_fl_byt_s) - abs(fl_byt_s - firewall_rule.min_fl_byt_s)) < 0.2 * (firewall_rule.max_fl_byt_s - firewall_rule.min_fl_byt_s)):
+                continue
+            if not ((abs(fl_pkt_s - firewall_rule.max_fl_pkt_s) - abs(fl_pkt_s - firewall_rule.min_fl_pkt_s)) < 0.2 * (firewall_rule.max_fl_pkt_s - firewall_rule.min_fl_pkt_s)):
+                continue
+            if not ((abs(tot_fw_pk - firewall_rule.max_tot_fw_pk) - abs(tot_fw_pk - firewall_rule.min_tot_fw_pk)) < 0.2 * (firewall_rule.max_tot_fw_pk - firewall_rule.min_tot_fw_pk)):
+                continue
+            if not ((abs(tot_bw_pk - firewall_rule.max_tot_bw_pk) - abs(tot_bw_pk - firewall_rule.min_tot_bw_pk)) < 0.2 * (firewall_rule.max_tot_bw_pk - firewall_rule.min_tot_bw_pk)):
+                continue   
+            colision = True             
+        return colision
 
 
     def create_static_rules(self, df: pd.DataFrame, config : DatasetConfig):
