@@ -154,6 +154,14 @@ class AuthConfig(BaseModel):
     token: TokenConfig
     login: LoginConfig
 
+class firewall_config(BaseModel):
+    chain: str
+    table: str
+
+class executor_config(BaseModel):
+    ssh_host: str
+    ssh_user: str
+    ssh_key_path: str
 
 class ServerConfig(BaseConfig):
     __config__filename__ = 'server.json'
@@ -165,6 +173,8 @@ class ServerConfig(BaseConfig):
     notification: NotificationConfig
     dev_mode: bool = False
     authentication: AuthConfig
+    firewall_info: firewall_config
+    executor_credentials: executor_config
 
 
 class BaseAIModelConfig(BaseModel):

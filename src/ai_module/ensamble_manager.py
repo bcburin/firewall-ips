@@ -13,17 +13,24 @@ from src.ai_module.utils.new_dataset import normalize
 from src.models.enums import Action
 from src.services.persistence import VersionedObjectManager
 from src.models.critical_rule import CriticalRuleOutModel, CriticalRule, GetAllCriticalRules
+from src.models.firewall_rule import FirewallRule, FirewallRuleOutModel, GetAllFirewallRules, FirewallRuleCreateModel
+from src.services.database import get_session
+from src.services.executor import SSHExecutor
+from src.services.firewall import IPTablesWriter
+from src.common.config import ConfigurationManager
 from src.services.database import InjectedSession
-from src.models.firewall_rule import FirewallRule, FirewallRuleOutModel, GetAllFirewallRules
 
 
 class EnsembleManager(VersionedObjectManager[EnsembleModel]):
 
     def __init__(self) -> None:
+        server_config = ConfigurationManager().get_server_config()
         self._classification_report: str | dict | None = None
         self._confusion_matrix: np.ndarray | None = None
         self.rules : list[FirewallRuleBaseModel] | None = None
         self.logs : list[FirewallRuleBaseModel] | None = None
+        executor = SSHExecutor(server_config.executor_credentials.ssh_host,server_config.executor_credentials.ssh_user,server_config.executor_credentials.ssh_key_path)
+        self.firewall_writer = IPTablesWriter(executor, server_config.firewall_info.chain, server_config.firewall_info.table)
         super().__init__(cls=EnsembleModel)
 
     def _reset_cache(self):
@@ -49,8 +56,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 self._classification_report, self._confusion_matrix = ensemble.evaluate(df_test)
         return self._classification_report, self._confusion_matrix
     
-    def check_critical_rule_collision(rule, protocol_map):
-        session: InjectedSession
+    def check_critical_rule_collision(self, rule, protocol_map):
+        session: InjectedSession = get_session().__next__ 
         dst_port=int(rule[0]),
         protocol=protocol_map[int(rule[1])]
         min_fl_byt_s=rule[2],
@@ -82,19 +89,19 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
             colision = True
         return colision
     
-    def check_rule_collision(rule, protocol_map):
-        session: InjectedSession
+    def check_rule_collision(self, rule, protocol_map):
+        session: InjectedSession = get_session().__next__ 
         dst_port=int(rule[0]),
         protocol=protocol_map[int(rule[1])]
         fl_byt_s=rule[2],
         fl_pkt_s=rule[3] * 0.95,
         tot_fw_pk=int(rule[4] * 0.95),
         tot_bw_pk=int(rule[5] * 0.95),
-        total_rows = session.query(CriticalRule).count()
+        total_rows = session.query(FirewallRule).count()
         fwrs: list[FirewallRuleOutModel] = (session.query(FirewallRule).order_by(FirewallRule.id)
                                        .offset(0).limit(1000).all())
-        GetAllFirewallRules(data=fwrs, total=total_rows)
-        firewall_rules = GetAllCriticalRules(total=total_rows, data=fwrs)
+        
+        firewall_rules = GetAllFirewallRules(data=fwrs, total=total_rows)
         colision = False
         for firewall_rule in firewall_rules:
             if not (dst_port == firewall_rule.dst_port):
@@ -111,20 +118,32 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 continue   
             colision = True             
         return colision
-
+    
+    def save_rules_in_db(self, rules: list[FirewallRuleCreateModel]):
+        session = get_session()
+        for rule in rules:
+            CriticalRule.create_from(create_model=rule).save(session)
 
     def create_static_rules(self, df: pd.DataFrame, config : DatasetConfig):
         protocol_map = config.protocol
-        ensemble = self.get_loaded_version()
+        ensemble : EnsembleModel = self.get_loaded_version()
+        df = ensemble.filter_col(df)
         normalized_df = normalize(df.copy())
         set_rules = set()
+        must_include_columns = [col.name for col in config.columns if col.must_include]
+        if 'Label' in normalized_df.columns:
+            normalized_df = normalized_df.drop(['Label'], axis=1)
+        count = 10000
         with tqdm(total= len(normalized_df)) as pbar:
             for index, row in normalized_df.iterrows():
                 original_row : pd.Series = df.loc[index]
                 label = ensemble.predict(row.to_frame().T)
                 if label != 0:
-                    set_rules.add(tuple(original_row[config['rule_variables']].tolist()) + (Action.BLOCK,))
+                    set_rules.add(tuple(original_row[must_include_columns].tolist()) + (Action.BLOCK,))
                 pbar.update(1)
+                count -= 1
+                if count <= 0: 
+                    break
         for rule in set_rules:
             static_rule = FirewallRuleBaseModel(
                 dst_port=int(rule[0]),
@@ -141,13 +160,19 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
             )
             if not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
                 self.rules.append(static_rule)
+                self.firewall_writer.append_rule(static_rule)
+            if len(self.rules) == 16:
+                self.save_rules_in_db(self.rules)
+                self.rules = []
         
     def create_dynamic_rules(self, package: pd.Series, config):
         protocol_map = config['protocol']
-        ensemble = self.get_loaded_version()
+        ensemble : EnsembleModel = self.get_loaded_version()
+        package = ensemble.filter_col(package)
         normalized_package = normalize(package.copy())
         label = ensemble.predict(normalized_package.to_frame().T)
-        rule = tuple(package[config['rule_variables']].tolist()) + (Action.BLOCK,)
+        must_include_columns = [col.name for col in config.columns if col.get('mustInclude')]
+        rule = tuple(package[must_include_columns].tolist()) + (Action.BLOCK,)
         dynamic_rule = FirewallRuleBaseModel(
             dst_port=int(rule[0]),
             protocol=protocol_map[int(rule[1])],
@@ -163,30 +188,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         )
         if label != 0 and not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
             self.rules.append(dynamic_rule)
-        self.logs.append(dynamic_rule)
+            self.firewall_writer.append_rule(dynamic_rule)
+        if len(self.rules) == 16:
+            self.save_rules_in_db(self.rules)
+            self.rules = []    
         
-
-    
-    def save_shap_plots(self, shap_values, class_index, class_name, model_name):
-        # Bar plot
-        shap.plots.bar(shap_values[:, :, class_index], show = False)
-        plt.savefig(f"src/ai_module/plots/{model_name}/{model_name}_{class_name}_feature_importance.png", bbox_inches='tight')
-        plt.close()
-
-        # Beeswarm plot
-        shap.plots.beeswarm(shap_values[:, :, class_index], show = False)
-        plt.savefig(f"src/ai_module/plots/{model_name}/{model_name}_{class_name}_shap.png", bbox_inches='tight')
-        plt.close()
-
-    def shap_metrics(self, df_train: pd.DataFrame, df_test: pd.DataFrame, model_name):
-        X_train = df_train.drop('Label', axis=1)
-        X_test = df_test.drop('Label', axis=1)
-        X_sub = shap.sample(X_train, 1000)
-        explainer = shap.Explainer(self.ensemble_model.predict_proba, X_sub)
-        shap_values = explainer(X_test[0:2000])
-        self.save_shap_plots(shap_values, 0, "allow", model_name)
-        self.save_shap_plots(shap_values, 1, "bruteforce", model_name)
-        self.save_shap_plots(shap_values, 2, "web", model_name)
-        self.save_shap_plots(shap_values, 3, "DOS", model_name)
-        self.save_shap_plots(shap_values, 4, "DDOS", model_name)
-        self.save_shap_plots(shap_values, 5, "botnet", model_name)
