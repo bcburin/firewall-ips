@@ -2,6 +2,7 @@
 import numpy as np
 import shap
 from pandas.core.interchange.dataframe_protocol import DataFrame
+from sqlmodel import Session
 from tqdm import tqdm
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ from src.models.enums import Action
 from src.services.persistence import VersionedObjectManager
 from src.models.critical_rule import CriticalRuleOutModel, CriticalRule, GetAllCriticalRules
 from src.models.firewall_rule import FirewallRule, FirewallRuleOutModel, GetAllFirewallRules, FirewallRuleCreateModel
-from src.services.database import get_session
+from src.services.database import get_session, DBSessionManager
 from src.services.executor import SSHExecutor
 from src.services.firewall import IPTablesWriter
 from src.common.config import ConfigurationManager
@@ -57,7 +58,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         return self._classification_report, self._confusion_matrix
     
     def check_critical_rule_collision(self, rule, protocol_map):
-        session: InjectedSession = get_session().__next__ 
+        session: Session = DBSessionManager().get_session()
         dst_port=int(rule[0]),
         protocol=protocol_map[int(rule[1])]
         min_fl_byt_s=rule[2],
