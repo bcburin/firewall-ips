@@ -30,8 +30,6 @@ def create_static_rules_pipeline():
     dataset_config = ConfigurationManager().get_dataset_config()
     df = read_and_prepare_data(data_path)
     em = EnsembleManager()
-    if 'Label' in df.columns:
-        df = df.drop(['Label'], axis=1)
     em.create_static_rules(df, dataset_config)
 
 
