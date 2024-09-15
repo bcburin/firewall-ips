@@ -1,6 +1,16 @@
 {
     "columns": [
         {
+            "name": "Dst Port",
+            "type": "int",
+            "mustInclude": true
+        },
+        {
+            "name": "Protocol",
+            "type": "int",
+            "mustInclude": true
+        },
+        {
             "name": "Fwd Pkt Len Mean",
             "type": "float"
         },
@@ -97,16 +107,6 @@
         {
             "name": "Idle Std",
             "type": "float"
-        },
-        {
-            "name": "Dst Port",
-            "type": "int",
-            "mustInclude": true
-        },
-        {
-            "name": "Protocol",
-            "type": "int",
-            "mustInclude": true
         },
         {
             "name": "Flow Duration",
