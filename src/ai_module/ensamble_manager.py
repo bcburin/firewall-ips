@@ -28,8 +28,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         server_config = ConfigurationManager().get_server_config()
         self._classification_report: str | dict | None = None
         self._confusion_matrix: np.ndarray | None = None
-        self.rules : list[FirewallRuleBaseModel] | None = None
-        self.logs : list[FirewallRuleBaseModel] | None = None
+        self.rules : list[FirewallRuleBaseModel] = []
+        self.logs : list[FirewallRuleBaseModel] = []
         executor = SSHExecutor(server_config.executor_credentials.ssh_host,server_config.executor_credentials.ssh_user,server_config.executor_credentials.ssh_key_path)
         self.firewall_writer = IPTablesWriter(executor, server_config.firewall_info.chain, server_config.firewall_info.table)
         super().__init__(cls=EnsembleModel)
@@ -37,7 +37,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
     def _reset_cache(self):
         self._classification_report = None
         self._confusion_matrix = None
-        self.rules = None
+        self.rules = []
 
     @property
     def already_evaluated(self) -> bool:
@@ -74,24 +74,45 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                                        .offset(0).limit(100).all())
         critical_rules = GetAllCriticalRules(total=total_rows, data=crs)
         colision = False
-        for critical_rule in critical_rules:
-            if (dst_port != critical_rule.dst_port) and critical_rule.dst_port != None:
-                continue
-            if (protocol != critical_rule.protocol) and critical_rule.protocol != None:
-                continue
-            if not (((min_fl_byt_s > critical_rule.max_fl_byt_s) and (max_fl_byt_s > min_fl_byt_s)) or (min_fl_byt_s == None and max_fl_byt_s == None)):
-                continue
-            if not (((min_fl_pkt_s > critical_rule.max_fl_pkt_s) and max_fl_pkt_s > min_fl_pkt_s) or (min_fl_pkt_s == None and max_fl_pkt_s == None)):
-                continue
-            if not (((min_tot_fw_pk > critical_rule.max_tot_fw_pk) and max_tot_fw_pk > min_tot_fw_pk) or (min_tot_fw_pk == None and max_tot_fw_pk == None)):
-                continue
-            if not (((min_tot_bw_pk > critical_rule.max_tot_bw_pk) and max_tot_bw_pk > min_tot_bw_pk) or (min_tot_bw_pk == None and max_tot_bw_pk == None)):
+        for critical_rule in critical_rules.data:
+            aux = 0
+            if critical_rule.protocol != None:
+                if critical_rule.protocol != protocol:
+                    continue
+            else:
+                aux +=1
+            if critical_rule.dst_port != None:
+                if critical_rule.dst_port != dst_port:
+                    continue
+            else:
+                aux +=1
+            if (critical_rule.min_fl_byt_s != None and critical_rule.max_fl_byt_s != None):
+                if ((min_fl_byt_s > critical_rule.max_fl_byt_s) or (max_fl_byt_s < critical_rule.min_fl_byt_s)):
+                    continue
+            else:
+                aux +=1
+            if (critical_rule.min_fl_pkt_s != None and critical_rule.max_fl_pkt_s != None):
+                if ((min_fl_pkt_s > critical_rule.max_fl_pkt_s) or (max_fl_pkt_s < critical_rule.min_fl_pkt_s)):
+                    continue
+            else:
+                aux +=1
+            if (critical_rule.min_tot_fw_pk != None and critical_rule.max_tot_fw_pk != None):
+                if ((min_tot_fw_pk > critical_rule.max_tot_fw_pk) or (max_tot_fw_pk < critical_rule.min_tot_fw_pk)):
+                    continue
+            else:
+                aux +=1
+            if (critical_rule.min_tot_bw_pk != None and critical_rule.max_tot_bw_pk != None):
+                if ((min_tot_bw_pk > critical_rule.max_tot_bw_pk) or (max_tot_bw_pk < critical_rule.min_tot_bw_pk)):
+                    continue
+            else:
+                aux +=1
+            if aux == 6:
                 continue
             colision = True
         return colision
     
     def check_rule_collision(self, rule, protocol_map):
-        session: InjectedSession = get_session().__next__ 
+        session: InjectedSession = DBSessionManager().get_session()
         dst_port=int(rule[0]),
         protocol=protocol_map[int(rule[1])]
         fl_byt_s=rule[2],
@@ -104,7 +125,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         
         firewall_rules = GetAllFirewallRules(data=fwrs, total=total_rows)
         colision = False
-        for firewall_rule in firewall_rules:
+        for firewall_rule in firewall_rules.data:
             if not (dst_port == firewall_rule.dst_port):
                 continue
             if not (protocol == firewall_rule.protocol):

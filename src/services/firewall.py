@@ -37,19 +37,24 @@ class IPTablesWriter(FirewallWriter):
     def _write_iptables_rule(rule: FirewallRule) -> str:
         rule_str = ""
         # check whether rule is valid
-        if not rule.protocol and (rule.src_port or rule.des_port):
-            raise ValueError("source and destiny ports must specify a protocol")
+        if not rule.protocol and (rule.dst_port):
+            raise ValueError("port must specify a protocol")
         # write protocol, source and destiny
-        if rule.protocol:
-            rule_str += f"-p {rule.protocol} "
-        if rule.src_address:
-            rule_str += f"-s {rule.src_address} "
-        if rule.des_address:
-            rule_str += f"-d {rule.des_address} "
-        if rule.protocol and rule.src_port:
-            rule_str += f"--sport {rule.src_port} "
-        if rule.protocol and rule.des_port:
-            rule_str += f"--dport {rule.des_port} "
+        if rule.protocol and rule.dst_port:
+            rule_str += f"--dport {rule.dst_port} "
+
+        if rule.min_fl_byt_s is not None and rule.max_fl_byt_s is not None:
+            rule_str += f"-m connbytes --connbytes {rule.min_fl_byt_s}:{rule.max_fl_byt_s} --connbytes-dir both --connbytes-mode bytes "
+
+        if rule.min_fl_pkt_s is not None and rule.max_fl_pkt_s is not None:
+            rule_str += f"-m connbytes --connbytes {rule.min_fl_pkt_s}:{rule.max_fl_pkt_s} --connbytes-dir both --connbytes-mode packets "
+
+        if rule.min_tot_fw_pk is not None and rule.max_tot_fw_pk is not None:
+            rule_str += f"-m conntrack --ctdir ORIGINAL --ctbytes {rule.min_tot_fw_pk}:{rule.max_tot_fw_pk} "
+
+        if rule.min_tot_bw_pk is not None and rule.max_tot_bw_pk is not None:
+            rule_str += f"-m conntrack --ctdir REPLY --ctbytes {rule.min_tot_bw_pk}:{rule.max_tot_bw_pk} "
+
         # write action
         if rule.action == Action.ALLOW:
             rule_str += "-j ACCEPT"
@@ -65,26 +70,31 @@ class IPTablesWriter(FirewallWriter):
             if not line or line.startswith('target') or 'Chain' in line:
                 continue
             parts = line.split()
-            if len(parts) < 5:
+            if len(parts) < 10:
                 continue
+            dst_port=parts[1]
+            protocol= parts[2]
+            min_fl_byt_s=parts[3]
+            max_fl_byt_s=parts[4]
+            min_fl_pkt_s=parts[5]
+            max_fl_pkt_s=parts[6]
+            min_tot_fw_pk=parts[7]
+            max_tot_fw_pk=parts[8]
+            min_tot_bw_pk=parts[9]
+            max_tot_bw_pk=parts[10]
             action = parts[0]
-            protocol = parts[1]
-            src_address = parts[3]
-            des_address = parts[4]
-            src_port = None
-            des_port = None
-            for part in parts[5:]:
-                if part.startswith('spt:'):
-                    src_port = part.split(':')[1]
-                elif part.startswith('dpt:'):
-                    des_port = part.split(':')[1]
             rule = FirewallRule(
                 protocol=protocol,
-                src_address=cls._translate_address(src_address),
-                des_address=cls._translate_address(des_address),
-                src_port=cls._translate_port(src_port),
-                des_port=cls._translate_port(des_port),
-                action=cls._translate_action(action)
+                dst_port=dst_port,
+                min_fl_byt_s=min_fl_byt_s,
+                max_fl_byt_s=max_fl_byt_s,
+                min_fl_pkt_s=min_fl_pkt_s,
+                max_fl_pkt_s=max_fl_pkt_s,
+                min_tot_fw_pk=min_tot_fw_pk,
+                max_tot_fw_pk=max_tot_fw_pk,
+                min_tot_bw_pk=min_tot_bw_pk,
+                max_tot_bw_pk=max_tot_bw_pk,
+                action=action
             )
             rules.append(rule)
         return rules
