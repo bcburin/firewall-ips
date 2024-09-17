@@ -185,7 +185,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 CriticalRule.create_from(create_model=static_rule).save(session)
                 #self.rules.append(static_rule)
                 #self.firewall_writer.append_rule(static_rule)
-            self.save_rules_in_db(static_rulefi)
+            self.save_rules_in_db(static_rule)
 
         
     def create_dynamic_rules(self, package: pd.Series, config):
