@@ -142,12 +142,13 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         return colision
     
     def save_rules_in_db(self, rules: list[FirewallRuleCreateModel]):
-        session = get_session()
+        session = DBSessionManager().get_session()
         for rule in rules:
             CriticalRule.create_from(create_model=rule).save(session)
 
     def create_static_rules(self, df: pd.DataFrame, config : DatasetConfig):
         protocol_map = config.protocol
+        session = DBSessionManager().get_session()
         ensemble : EnsembleModel = self.get_loaded_version()
         df = ensemble.filter_col(df)
         normalized_df = normalize(df.copy())
@@ -181,11 +182,11 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 action=rule[6]
             )
             if not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
-                self.rules.append(static_rule)
-                self.firewall_writer.append_rule(static_rule)
-            if len(self.rules) == 16:
-                self.save_rules_in_db(self.rules)
-                self.rules = []
+                CriticalRule.create_from(create_model=static_rule).save(session)
+                #self.rules.append(static_rule)
+                #self.firewall_writer.append_rule(static_rule)
+            self.save_rules_in_db(static_rulefi)
+
         
     def create_dynamic_rules(self, package: pd.Series, config):
         protocol_map = config['protocol']
