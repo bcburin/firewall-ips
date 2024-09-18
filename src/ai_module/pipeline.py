@@ -30,10 +30,5 @@ def create_static_rules_pipeline():
     dataset_config = ConfigurationManager().get_dataset_config()
     df = read_and_prepare_data(data_path)
     em = EnsembleManager()
-    em.create_static_rules(df, dataset_config)
+    em.create_rules(df, dataset_config)
 
-
-def create_dynamic_rules_pipeline(package: pd.Series):
-    dataset_config = ConfigurationManager().get_database_config()
-    em = EnsembleManager()
-    em.create_dynamic_rules(package, dataset_config)

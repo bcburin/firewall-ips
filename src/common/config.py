@@ -154,11 +154,11 @@ class AuthConfig(BaseModel):
     token: TokenConfig
     login: LoginConfig
 
-class firewall_config(BaseModel):
+class FirewallConfig(BaseModel):
     chain: str
     table: str
 
-class executor_config(BaseModel):
+class ExecutorConfig(BaseModel):
     ssh_host: str
     ssh_user: str
     ssh_key_path: str
@@ -173,8 +173,8 @@ class ServerConfig(BaseConfig):
     notification: NotificationConfig
     dev_mode: bool = False
     authentication: AuthConfig
-    firewall_info: firewall_config
-    executor_credentials: executor_config
+    firewall_info: FirewallConfig
+    executor_credentials: ExecutorConfig
 
 
 class BaseAIModelConfig(BaseModel):

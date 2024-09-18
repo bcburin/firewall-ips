@@ -1,6 +1,5 @@
 
 import numpy as np
-import shap
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from sqlmodel import Session
 from tqdm import tqdm
@@ -69,12 +68,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         max_tot_fw_pk=int(rule[4] * 1.05),
         min_tot_bw_pk=int(rule[5] * 0.95),
         max_tot_bw_pk=int(rule[5] * 1.05),
-        total_rows = session.query(CriticalRule).count()
-        crs: list[CriticalRuleOutModel] = (session.query(CriticalRule).order_by(CriticalRule.id)
-                                       .offset(0).limit(100).all())
-        critical_rules = GetAllCriticalRules(total=total_rows, data=crs)
-        colision = False
-        for critical_rule in critical_rules.data:
+        crs: list[CriticalRuleOutModel] = (session.query(CriticalRule).all())
+        for critical_rule in crs:
             aux = 0
             if critical_rule.protocol != None:
                 if critical_rule.protocol != protocol:
@@ -108,8 +103,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 aux +=1
             if aux == 6:
                 continue
-            colision = True
-        return colision
+            return True
+        return False
     
     def check_rule_collision(self, rule, protocol_map):
         session: InjectedSession = DBSessionManager().get_session()
@@ -120,11 +115,9 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         tot_fw_pk=int(rule[4] * 0.95),
         tot_bw_pk=int(rule[5] * 0.95),
         total_rows = session.query(FirewallRule).count()
-        fwrs: list[FirewallRuleOutModel] = (session.query(FirewallRule).order_by(FirewallRule.id)
-                                       .offset(0).limit(1000).all())
+        fwrs: list[FirewallRuleOutModel] = (session.query(FirewallRule).all())
         
         firewall_rules = GetAllFirewallRules(data=fwrs, total=total_rows)
-        colision = False
         for firewall_rule in firewall_rules.data:
             if not (dst_port == firewall_rule.dst_port):
                 continue
@@ -138,15 +131,15 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 continue
             if not ((abs(tot_bw_pk - firewall_rule.max_tot_bw_pk) - abs(tot_bw_pk - firewall_rule.min_tot_bw_pk)) < 0.2 * (firewall_rule.max_tot_bw_pk - firewall_rule.min_tot_bw_pk)):
                 continue   
-            colision = True             
-        return colision
+            return True            
+        return False
     
     def save_rules_in_db(self, rules: list[FirewallRuleCreateModel]):
         session = DBSessionManager().get_session()
         for rule in rules:
             CriticalRule.create_from(create_model=rule).save(session)
 
-    def create_static_rules(self, df: pd.DataFrame, config : DatasetConfig):
+    def create_rules(self, df: pd.DataFrame, config : DatasetConfig):
         protocol_map = config.protocol
         session = DBSessionManager().get_session()
         ensemble : EnsembleModel = self.get_loaded_version()
@@ -167,8 +160,9 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 count -= 1
                 if count <= 0: 
                     break
+        rules : list[FirewallRuleCreateModel] = []
         for rule in set_rules:
-            static_rule = FirewallRuleBaseModel(
+            firewall_rule = FirewallRuleCreateModel(
                 dst_port=int(rule[0]),
                 protocol=protocol_map[int(rule[1])],
                 min_fl_byt_s=rule[2] * 0.95,
@@ -182,37 +176,8 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 action=rule[6]
             )
             if not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
-                CriticalRule.create_from(create_model=static_rule).save(session)
-                #self.rules.append(static_rule)
-                #self.firewall_writer.append_rule(static_rule)
-            self.save_rules_in_db(static_rule)
-
-        
-    def create_dynamic_rules(self, package: pd.Series, config):
-        protocol_map = config['protocol']
-        ensemble : EnsembleModel = self.get_loaded_version()
-        package = ensemble.filter_col(package)
-        normalized_package = normalize(package.copy())
-        label = ensemble.predict(normalized_package.to_frame().T)
-        must_include_columns = [col.name for col in config.columns if col.get('mustInclude')]
-        rule = tuple(package[must_include_columns].tolist()) + (Action.BLOCK,)
-        dynamic_rule = FirewallRuleBaseModel(
-            dst_port=int(rule[0]),
-            protocol=protocol_map[int(rule[1])],
-            min_fl_byt_s=rule[2] * 0.95,
-            max_fl_byt_s=rule[2] * 1.05,
-            min_fl_pkt_s=rule[3] * 0.95,
-            max_fl_pkt_s=rule[3] * 1.05,
-            min_tot_fw_pk=int(rule[4] * 0.95),
-            max_tot_fw_pk=int(rule[4] * 1.05),
-            min_tot_bw_pk=int(rule[5] * 0.95),
-            max_tot_bw_pk=int(rule[5] * 1.05),
-            action=rule[6]
-        )
-        if label != 0 and not self.check_critical_rule_collision(rule, protocol_map) and not self.check_rule_collision(rule, protocol_map):
-            self.rules.append(dynamic_rule)
-            self.firewall_writer.append_rule(dynamic_rule)
-        if len(self.rules) == 16:
-            self.save_rules_in_db(self.rules)
-            self.rules = []    
-        
+                rules.append(firewall_rule)
+                #self.rules.append(firewall_rule)
+                #self.firewall_writer.append_rule(firewall_rule)
+            
+        FirewallRule().bulk_create(session=session,iterable=rules)
