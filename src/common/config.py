@@ -250,6 +250,7 @@ class DatasetConfig(BaseConfig):
     class MappingConfig(BaseModel):
         label: str
         value: int
+        type: str
 
     columns: list[ColumnDescription]
     mapping: list[MappingConfig]

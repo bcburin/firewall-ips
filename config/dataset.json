@@ -322,67 +322,83 @@
     "mapping": [
         {
             "label": "SSH-Bruteforce",
-            "value": 1
+            "value": 1,
+            "type": "Bruteforce"
         },
         {
             "label": "FTP-BruteForce",
-            "value": 1
+            "value": 1,
+            "type": "Bruteforce"
         },
         {
             "label": "Brute Force -XSS",
-            "value": 2
+            "value": 2,
+            "type": "web attack"
         },
         {
             "label": "Brute Force -Web",
-            "value": 2
+            "value": 2,
+            "type": "web attack"
         },
         {
             "label": "SQL Injection",
-            "value": 2
+            "value": 2,
+            "type": "web attack"
         },
         {
             "label": "DoS attacks-Hulk",
-            "value": 3
+            "value": 3,
+            "type": "DOS"
         },
         {
             "label": "DoS attacks-SlowHTTPTest",
-            "value": 3
+            "value": 3,
+            "type": "DOS"
         },
         {
             "label": "DoS attacks-Slowloris",
-            "value": 3
+            "value": 3,
+            "type": "DOS"
         },
         {
             "label": "DoS attacks-GoldenEye",
-            "value": 3
+            "value": 3,
+            "type":"DOS"
         },
         {
             "label": "DDOS attack-HOIC",
-            "value": 4
+            "value": 4,
+            "type":"DDOS"
         },
         {
             "label": "DDOS attack-LOIC-UDP",
-            "value": 4
+            "value": 4,
+            "type":"DDOS"
         },
         {
             "label": "DDoS attacks-LOIC-HTTP",
-            "value": 4
+            "value": 4,
+            "type":"DDOS"
         },
         {
             "label": "Bot",
-            "value": 5
+            "value": 5,
+            "type":"Botnet"
         },
         {
             "label": "Infilteration",
-            "value": 6
+            "value": 6,
+            "type": "Infilteration"
         },
         {
             "label": "Benign",
-            "value": 0
+            "value": 0,
+            "type": "benign"
         },
         {
             "label": "Label",
-            "value": 0
+            "value": 0,
+            "type": "benign"
         }
     ],
     "protocol": [

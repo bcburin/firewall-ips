@@ -27,8 +27,7 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         server_config = ConfigurationManager().get_server_config()
         self._classification_report: str | dict | None = None
         self._confusion_matrix: np.ndarray | None = None
-        self.rules : list[FirewallRuleBaseModel] = []
-        self.logs : list[FirewallRuleBaseModel] = []
+        self._counter : dict[str, int] = {}
         executor = SSHExecutor(server_config.executor_credentials.ssh_host,server_config.executor_credentials.ssh_user,server_config.executor_credentials.ssh_key_path)
         self.firewall_writer = IPTablesWriter(executor, server_config.firewall_info.chain, server_config.firewall_info.table)
         super().__init__(cls=EnsembleModel)
@@ -160,9 +159,9 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 count -= 1
                 if count <= 0: 
                     break
-        rules : list[FirewallRuleCreateModel] = []
+        rules : list[FirewallRule] = []
         for rule in set_rules:
-            firewall_rule = FirewallRuleCreateModel(
+            firewall_rule = FirewallRule(
                 dst_port=int(rule[0]),
                 protocol=protocol_map[int(rule[1])],
                 min_fl_byt_s=rule[2] * 0.95,
@@ -180,4 +179,4 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
                 #self.rules.append(firewall_rule)
                 #self.firewall_writer.append_rule(firewall_rule)
             
-        FirewallRule().bulk_create(session=session,iterable=rules)
+        FirewallRule.bulk_create(session=session,iterable=rules)
