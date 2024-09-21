@@ -59,3 +59,6 @@ class EnsembleModel(PersistableObject):
                 classification_report(y_test, y_pred),
                 confusion_matrix(y_test, y_pred)
             )
+
+    def filter_col(self, df: DataFrame) -> DataFrame:
+        return df[self.columns]

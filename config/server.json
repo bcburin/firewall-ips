@@ -12,7 +12,7 @@
     },
     "aiModule": {
         "training": {
-            "cronString": "* * * * *",
+            "cronString": "*/5 * * * *",
             "runOnStart": false,
             "data": {
                 "type": "directory",
@@ -20,7 +20,7 @@
             }
         },
         "staticRuleCreation": {
-            "cronString":"0 0 0 ? * SUN *",
+            "cronString":"*/30 * * * *",
             "runOnStart": false,
             "data": {
                 "type": "directory",
@@ -69,5 +69,15 @@
             "notifyOnMaxTries": true
         }
     },
-    "devMode": true
+    "devMode": true,
+    "firewall_info":{
+        "chain": "xxx",
+        "table": "xxx"
+    },
+    "executor_credentials":{
+        "ssh_host": "xxx",
+        "ssh_user": "xxx",
+        "ssh_key_path": "xxx"
+    }
+
 }

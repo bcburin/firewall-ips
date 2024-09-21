@@ -154,6 +154,14 @@ class AuthConfig(BaseModel):
     token: TokenConfig
     login: LoginConfig
 
+class FirewallConfig(BaseModel):
+    chain: str
+    table: str
+
+class ExecutorConfig(BaseModel):
+    ssh_host: str
+    ssh_user: str
+    ssh_key_path: str
 
 class ServerConfig(BaseConfig):
     __config__filename__ = 'server.json'
@@ -165,6 +173,8 @@ class ServerConfig(BaseConfig):
     notification: NotificationConfig
     dev_mode: bool = False
     authentication: AuthConfig
+    firewall_info: FirewallConfig
+    executor_credentials: ExecutorConfig
 
 
 class BaseAIModelConfig(BaseModel):
@@ -240,6 +250,7 @@ class DatasetConfig(BaseConfig):
     class MappingConfig(BaseModel):
         label: str
         value: int
+        type: str
 
     columns: list[ColumnDescription]
     mapping: list[MappingConfig]

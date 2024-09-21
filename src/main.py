@@ -1,7 +1,7 @@
 import uvicorn
 
 from src.ai_module.ensamble_manager import EnsembleManager
-from src.ai_module.pipeline import create_static_rules_pipeline
+from src.ai_module.pipeline import create_static_rules_pipeline, train_pipeline
 from src.api.api import api
 from src.common.config import ConfigurationManager, ServerConfig
 from src.models.user import User

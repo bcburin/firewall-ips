@@ -27,6 +27,9 @@ def create_estimators(df: DataFrame):
         'multilayerperceptron': mlp_classifier,
         'knn': knn_model
     }
+    estimators = {
+        'lightgbm': lgbm_model
+    }
     return estimators
 
 
@@ -43,13 +46,13 @@ def select_best_estimator_from_hyperparams(estimator: BaseEstimator, param_grid:
 def create_ensamble(models_config: AIModelsTrainingConfig, df: DataFrame):
     estimators = create_estimators(df=df)
     models_config_dict = models_config.model_dump()
+    num_class = df['Label'].nunique()
     estimators_tuple_list = []
-    #num_class = calculate_numclass(df)
     for name, estimator in estimators.items():
-        #model_config_dict = models_config_dict[name]
-        #if model_config_dict["use_num_class"]:
-            #model_config_dict["num_class"] = num_class
-        #del model_config_dict["use_num_class"]
+        model_config_dict = models_config_dict[name]
+        if model_config_dict["num_class"]:
+            model_config_dict["num_class"] = num_class
+        del model_config_dict["num_class"]
         estimators_tuple_list.append((
             name,
             select_best_estimator_from_hyperparams(
