@@ -1,4 +1,4 @@
-
+from datetime import datetime
 import numpy as np
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from sqlmodel import Session
@@ -19,19 +19,34 @@ from src.services.executor import SSHExecutor
 from src.services.firewall import IPTablesWriter
 from src.common.config import ConfigurationManager
 from src.services.database import InjectedSession
+from src.models.variable import ConfusionMatrixInfo, Time
 
 
 class EnsembleManager(VersionedObjectManager[EnsembleModel]):
 
     def __init__(self) -> None:
         server_config = ConfigurationManager().get_server_config()
+        database_config = ConfigurationManager().get_dataset_config()
         self._classification_report: str | dict | None = None
         self._confusion_matrix: np.ndarray | None = None
-        self._counter : dict[str, int] = {}
+        self._counter_attacktype : list[int] = ([0] * database_config.num_classes)
+        self._counter_port: dict[str, int] = {}
+        self._model_result_info : ConfusionMatrixInfo
+        self._attack_type_map: list[str] = self.get_mapping()
+        self._attack_per_minute: dict[(int, int), int] = {}
         executor = SSHExecutor(server_config.executor_credentials.ssh_host,server_config.executor_credentials.ssh_user,server_config.executor_credentials.ssh_key_path)
         self.firewall_writer = IPTablesWriter(executor, server_config.firewall_info.chain, server_config.firewall_info.table)
         super().__init__(cls=EnsembleModel)
 
+    def get_mapping(self):
+        database_config = ConfigurationManager().get_dataset_config()
+        max_value = max(mapping.value for mapping in database_config.mapping)
+        map_list = [None] * (max_value + 1)
+        for mapping in database_config.mapping:
+            value = mapping.value
+            map_list[value] = mapping.type
+        return map_list
+    
     def _reset_cache(self):
         self._classification_report = None
         self._confusion_matrix = None
@@ -48,12 +63,30 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
             self.load_new_version(new_ensemble)
             self._reset_cache()
 
-    def evaluate_loaded_ensemble(self, df_test: DataFrame):
+    def evaluate_loaded_ensemble(self, df_test: DataFrame) -> ConfusionMatrixInfo:
         if not self.already_evaluated:
             with self.load_guard():
                 ensemble: EnsembleModel = self.get_loaded_version()
                 self._classification_report, self._confusion_matrix = ensemble.evaluate(df_test)
-        return self._classification_report, self._confusion_matrix
+        confusion_matrix = [[str(val) for val in row] for row in self._confusion_matrix]
+        precision = []
+        recall = []
+        f1_score = []
+        for label, metrics in self._classification_report.items():
+            if label not in ['accuracy', 'macro avg', 'weighted avg']:
+                precision.append(metrics['precision'])
+                recall.append(metrics['recall'])
+                f1_score.append(metrics['f1-score'])
+        accuracy = self._classification_report['accuracy']
+        self._model_result_info = ConfusionMatrixInfo(
+            confusion_matrix=confusion_matrix,
+            precision=precision,
+            recall=recall,
+            f1_score=f1_score,
+            accuracy=accuracy
+        )
+
+        return self._model_result_info
     
     def check_critical_rule_collision(self, rule, protocol_map):
         session: Session = DBSessionManager().get_session()
@@ -148,13 +181,25 @@ class EnsembleManager(VersionedObjectManager[EnsembleModel]):
         must_include_columns = [col.name for col in config.columns if col.must_include]
         if 'Label' in normalized_df.columns:
             normalized_df = normalized_df.drop(['Label'], axis=1)
-        count = 10000
+        count = 2000
         with tqdm(total= len(normalized_df)) as pbar:
             for index, row in normalized_df.iterrows():
                 original_row : pd.Series = df.loc[index]
                 label = ensemble.predict(row.to_frame().T)
-                if label != 0:
-                    set_rules.add(tuple(original_row[must_include_columns].tolist()) + (Action.BLOCK,))
+                if label[0] != 0:
+                    rule = tuple(original_row[must_include_columns].tolist()) + (Action.BLOCK,)
+                    set_rules.add(rule)
+                    self._counter_attacktype[label[0]] += 1
+                    if str(rule[0]) in self._counter_port:
+                        self._counter_port[str(rule[0])] += 1
+                    else:
+                        self._counter_port[str(rule[0])] = 1
+                    hour=datetime.now().hour,
+                    minute=datetime.now().minute
+                    if (hour,minute) in self._attack_per_minute:
+                        self._attack_per_minute[(hour,minute)] += 1
+                    else:
+                        self._attack_per_minute[(hour,minute)] = 1
                 pbar.update(1)
                 count -= 1
                 if count <= 0: 

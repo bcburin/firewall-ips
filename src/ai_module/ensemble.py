@@ -56,7 +56,7 @@ class EnsembleModel(PersistableObject):
             y_test = df_test['Label']
             y_pred = self._ensemble_model.predict(x_test)
             return (
-                classification_report(y_test, y_pred),
+                classification_report(y_test, y_pred,  output_dict=True),
                 confusion_matrix(y_test, y_pred)
             )
 

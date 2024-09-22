@@ -20,7 +20,7 @@ def train_pipeline():
     train_df, test_df = train_test_split(df, test_size=0.95, random_state=2, shuffle=True)
     em = EnsembleManager()
     em.train_new_ensemble(df_training=train_df)
-    em.evaluate_loaded_ensemble(df_test=test_df)
+    model_result_info = em.evaluate_loaded_ensemble(df_test=test_df)
     create_static_rules_pipeline()
 
 
