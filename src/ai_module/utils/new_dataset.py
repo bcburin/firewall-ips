@@ -18,7 +18,7 @@ from src.common.config import ConfigurationManager, DatasetConfig, ColumnType
 def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
     config = ConfigurationManager().get_dataset_config()
     df = fix_data_type(df, config)
-    df = drop_infinate_null(df)
+    df = drop_null_collumns(df)
     df = generate_multi_label(df, config)
     df = drop_unnecessary_column(df)
     df = stratified_sample(df, config.sample_size, config.num_classes)
@@ -57,7 +57,7 @@ def stratified_sample(df: pd.DataFrame, k: int, n_classes: int) -> pd.DataFrame:
     return df_sampled
 
 
-def drop_infinate_null(df: pd.DataFrame) -> pd.DataFrame:
+def drop_null_collumns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.replace(["Infinity", "infinity"], np.inf)
     df = df.replace([np.inf, -np.inf], np.nan)
     df.dropna(inplace=True)
@@ -99,13 +99,13 @@ def remove_columns(df: pd.DataFrame, col_names: Iterable[str]):
     return df
 
 
-def drop_constant_col(df: pd.DataFrame) -> pd.DataFrame:
+def drop_zero_variance_columns(df: pd.DataFrame) -> pd.DataFrame:
     variances = df.var(numeric_only=True)
     constant_columns = variances[variances == 0].index
     return remove_columns(df, constant_columns)
 
 
-def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+def drop_duplicates_columns(df: pd.DataFrame) -> pd.DataFrame:
     duplicates = set()
     for i in range(0, len(df.columns)):
         col1 = df.columns[i]
@@ -117,7 +117,7 @@ def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     return remove_columns(df, duplicates)
 
 
-def drop_correlated_col(df: pd.DataFrame) -> pd.DataFrame:
+def drop_correlated_columns(df: pd.DataFrame) -> pd.DataFrame:
     corr = df.corr(numeric_only=True)
     correlated_col = set()
     is_correlated = [True] * len(corr.columns)
@@ -151,9 +151,9 @@ def select_col(df: pd.DataFrame, col: list[str]) -> pd.DataFrame:
 
 
 def filter_col(df: pd.DataFrame) -> pd.DataFrame:
-    df = drop_constant_col(df)
-    df = drop_duplicates(df)
-    df = drop_correlated_col(df)
+    df = drop_zero_variance_columns(df)
+    df = drop_duplicates_columns(df)
+    df = drop_correlated_columns(df)
     return df
 
 
