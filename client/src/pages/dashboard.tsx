@@ -178,12 +178,14 @@ const mockAttacksPerTimeData: ChartData<'line', number[], string> = {
     ],
 };
 
-const cmLabels = ['array', 'function', 'loop', 'pointers'];
+const cmLabels = ['Brute Force', 'SQL Injection', 'DoS', 'DDoS', 'Bot', 'Infiltration'];
 const cmData = [
-    [0.96, 0.00, 0.00, 0.04],
-    [0.08, 0.92, 0.00, 0.00],
-    [0.20, 0.20, 0.60, 0.00],
-    [0.00, 0.00, 0.00, 1.00],
+    [0.94, 0.00, 0.00, 0.04, 0.02, 0.00],
+    [0.07, 0.92, 0.00, 0.00, 0.01, 0.00],
+    [0.18, 0.20, 0.60, 0.00, 0.00, 0.02],
+    [0.00, 0.00, 0.00, 1.00, 0.00, 0.00],
+    [0.00, 0.02, 0.08, 0.00, 0.90, 0.00],
+    [0.00, 0.02, 0.04, 0.00, 0.00, 0.94],
 ];
 
 
