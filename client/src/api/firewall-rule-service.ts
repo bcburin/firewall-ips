@@ -11,7 +11,7 @@ export interface FirewallRuleBase {
     srcAddress?: string | null;
     desAddress?: string | null;
     srcPort?: number | null;
-    desPort?: number | null;
+    dstPort?: number | null;
     action: Action;
 }
 

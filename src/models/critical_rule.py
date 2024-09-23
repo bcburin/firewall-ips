@@ -17,6 +17,8 @@ MAX_PORT_NUMBER = 65535
 
 
 class CriticalRuleBaseModel(BaseModel, table=False):
+    title: str
+    description: str | None
     dst_port: int | None = None
     protocol: str | None = None
     min_fl_byt_s: float | None = None
@@ -78,4 +80,4 @@ class CriticalRule(CriticalRuleOutModel, BaseSQLModel, table=True):
         title = action_str + (f' from {from_str}' if from_str else '') + (f' to {dest_str}' if dest_str else '')
         return CriticalRule(
             action=action, protocol=protocol, src_address=src_address, des_address=des_address, src_port=src_port,
-            des_port=des_port, title=title, description=description, start_time=start_time, end_time=end_time)
+            dst_port=des_port, title=title, description=description, start_time=start_time, end_time=end_time)

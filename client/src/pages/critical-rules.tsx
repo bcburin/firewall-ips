@@ -64,7 +64,7 @@ const CriticalRulesPage: React.FC = () => {
         { field: 'srcAddress', headerName: 'Src Address', width: 120 },
         { field: 'desAddress', headerName: 'Dest Address', width: 120 },
         { field: 'srcPort', headerName: 'Src Port', width: 100 },
-        { field: 'desPort', headerName: 'Dest Port', width: 100 },
+        { field: 'dstPort', headerName: 'Dest Port', width: 100 },
         { field: 'natSrcPort', headerName: 'NAT Src Port', width: 100 },
         { field: 'natDesPort', headerName: 'NAT Dest Port', width: 100 },
         { field: 'startTime', headerName: 'Start Time', width: 200, type: "dateTime", valueGetter: (value) => value && new Date(value) },

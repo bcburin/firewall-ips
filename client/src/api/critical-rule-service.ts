@@ -11,7 +11,7 @@ export interface CriticalRuleBase {
     srcAddress?: string;
     desAddress?: string;
     srcPort?: number | '';
-    desPort?: number | '';
+    dstPort?: number | '';
     action: Action | '';
     title: string;
     description?: string;

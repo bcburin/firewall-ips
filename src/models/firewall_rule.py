@@ -58,4 +58,4 @@ class FirewallRule(FirewallRuleOutModel, BaseSQLModel, table=True):
         action_str = action.value.capitalize()
         return FirewallRule(
             action=action, protocol=protocol, src_address=src_address, des_address=des_address,
-            src_port=src_port, des_port=des_port)
+            src_port=src_port, dst_port=des_port)
