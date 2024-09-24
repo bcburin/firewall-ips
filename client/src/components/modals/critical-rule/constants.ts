@@ -27,7 +27,7 @@ export const fields: FieldConfig[] = [
     { name: 'srcAddress', label: 'Src. Address', type: FieldType.NUMBER },
     { name: 'desAddress', label: 'Des. Address', type: FieldType.NUMBER },
     { name: 'srcPort', label: 'Src. Port', type: FieldType.NUMBER },
-    { name: 'desPort', label: 'Des. Port', type: FieldType.NUMBER },
+    { name: 'dstPort', label: 'Des. Port', type: FieldType.NUMBER },
     { name: 'startTime', label: 'Start Time', type: FieldType.DATE },
     { name: 'endTime', label: 'End Time', type: FieldType.DATE },
     { name: 'description', label: 'Description', type: FieldType.TEXTAREA },

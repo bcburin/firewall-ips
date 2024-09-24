@@ -23,7 +23,7 @@ const FirewallRulesPage: React.FC = () => {
         { field: 'srcPort', headerName: 'Src Port', width: 100 },
         { field: 'dstPort', headerName: 'Dest Port', width: 100 },
         { field: 'natSrcPort', headerName: 'NAT Src Port', width: 100 },
-        { field: 'natDesPort', headerName: 'NAT Dest Port', width: 100 },
+        { field: 'natdstPort', headerName: 'NAT Dest Port', width: 100 },
         { field: 'updatedAt', headerName: 'Last Update', width: 200, type: "dateTime", valueGetter: (value) => value && new Date(value) },
         { field: 'createdAt', headerName: 'Creation Time', width: 200, type: "dateTime", valueGetter: (value) => value && new Date(value) },
     ],
@@ -54,10 +54,13 @@ const FirewallRulesPage: React.FC = () => {
                                             columns: {
                                                 columnVisibilityModel: {
                                                     natSrcPort: false,
-                                                    natDesPort: false,
+                                                    natdstPort: false,
                                                     startTime: false,
                                                     endTime: false,
                                                     createdAt: false,
+                                                    srcAddress: false,
+                                                    desAddress: false,
+                                                    srcPort: false,
                                                 }
                                             }
                                         }}
